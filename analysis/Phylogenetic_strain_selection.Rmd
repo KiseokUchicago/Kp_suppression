@@ -1,0 +1,165 @@
+---
+title: "Phylogenetic_strain_selection"
+author: "KiseokUchicago"
+date: "2021-06-16"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(fig.width=11, fig.height=9,
+                      error=TRUE, echo=TRUE, eval=TRUE, warning=FALSE, message=FALSE)
+```
+
+## Phylogenetic tree construction
+**Kiseok Lee** 
+
+
+```{r}
+# libraries
+library(dplyr)
+library(ggplot2)
+library(RColorBrewer)
+library(vegan)
+library(tidyverse)
+library(magrittr)
+library(readxl)
+library(reshape2)
+library(gtools)
+library(devtools)
+library(openxlsx)
+library(ape)
+```
+
+## 1. Data input
+```{r}
+df_Biobank <- read.csv('data/biobank.umap.16sSeqs.csv')
+
+dim(df_Biobank)
+colnames(df_Biobank)
+head(df_Biobank)
+
+# get id and sequence
+# id is seq_id + species
+phylo_Biobank <- df_Biobank %>% unite(phy_id,c("seq_id",'species'),sep="_")
+# remove space in the id for downstream
+phylo_Biobank$phy_id <- gsub(" ","_",phylo_Biobank$phy_id) 
+# remove "[" and "]"
+phylo_Biobank$phy_id <- gsub("\\[","",phylo_Biobank$phy_id)
+phylo_Biobank$phy_id <- gsub("]","",phylo_Biobank$phy_id)
+col2_Biobank <- phylo_Biobank %>% select(phy_id,nuc_sequence)
+
+dim(col2_Biobank)
+head(col2_Biobank)
+
+write.table(col2_Biobank, file='input_for_fasta_conversion.txt', quote=FALSE, sep='\t', row.names = F, col.names=F)
+
+```
+
+## 2. Input the tree and cut the tree
+
+```{r}
+phy_tree <- ape::read.tree("data/Biobank_align_mafft.fasta.treefile_rooted.nwk")
+phy_tree
+
+# will be using cutree function in hclust package. In order to do so, we need to make it ultrametric
+# not ultrametric
+is.ultrametric(phy_tree)
+
+# convert to ultrametric tree 
+# (http://blog.phytools.org/2017/03/forceultrametric-method-for-ultrametric.html)
+force.ultrametric<-function(tree,method=c("nnls","extend")){
+    method<-method[1]
+    if(method=="nnls") tree<-nnls.tree(cophenetic(tree),tree,
+        rooted=TRUE,trace=0)
+    else if(method=="extend"){
+        h<-diag(vcv(tree))
+        d<-max(h)-h
+        ii<-sapply(1:Ntip(tree),function(x,y) which(y==x),
+            y=tree$edge[,2])
+        tree$edge.length[ii]<-tree$edge.length[ii]+d
+    } else 
+        cat("method not recognized: returning input tree\n\n")
+    tree
+}
+
+library(phangorn)
+ult_tree <- force.ultrametric(phy_tree)
+is.ultrametric(ult_tree) # true
+
+# convert to hclust object
+hcl <- as.hclust(ult_tree)
+plot(hcl,labels = FALSE, hang= -1)
+
+```
+
+The cutree() function provides the functionality to output either desired number of clusters or clusters obtained from cutting the dendrogram at a certain height.
+
+```{r}
+# cut tree
+cut_tree <- cutree(hcl, k=100)
+table(cut_tree) 
+hist(as.vector(table(cut_tree)), breaks=100)
+
+# 
+table(cut_tree)
+cut_tree
+
+
+# this is not a good method to cluster
+```
+
+## 3. Use distance matrix to do k-means clustering
+
+```{r}
+# input tab delimited table
+ml_dist <- read.table("data/Biobank_align_mafft.fasta.mldist.tsv", sep="\t", header = F)
+head(ml_dist)
+
+# set row and column name
+ml_dist %<>% select(-V531)
+dim(ml_dist)
+
+colnames(ml_dist)
+tibble::column_to_rownames(ml_dist, var="V1") %>% dim()
+
+mat_dist <- tibble::column_to_rownames(ml_dist, var="V1")
+colnames(mat_dist) <- rownames(mat_dist)
+dim(mat_dist)
+
+mat_dist <- as.matrix(mat_dist)
+
+```
+
+K-means clustering
+
+```{r}
+# distance matrix has 529 x 529 dimension
+library(FCPS)
+kmeans_100 <- kmeansClustering(mat_dist, ClusterNo=100, RandomNo=1, PlotIt= T, Verbose = T)
+
+kmeans_cls <- kmeans_100$Cls
+table(kmeans_cls)
+
+# Histogram of # of strains belonging to each cluster
+hist(as.vector(table(kmeans_cls)), breaks=100)
+
+# looking into the clusters
+kmeans_cls[kmeans_cls==90]
+
+# searching
+df_cls <- data.frame(kmeans_cls)
+df_cls <- tibble::rownames_to_column(df_cls, var="id")
+colnames(df_cls)
+
+
+df_cls %>% filter(str_detect(id, "Bacteroides_fragilis"))
+
+```
+
+
+
+
+
+
