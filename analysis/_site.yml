@@ -1,7 +1,7 @@
-name: "Kp_suppression"
+name: Kp_suppression
 output_dir: ../docs
 navbar:
-  title: "Kp_suppression"
+  title: Kp_suppression
   left:
   - text: Home
     href: index.html
@@ -9,6 +9,10 @@ navbar:
     href: about.html
   - text: License
     href: license.html
+  right:
+  - icon: fa-github
+    text: Source code
+    href: https://github.com/KiseokUchicago/Kp_suppression
 output:
   workflowr::wflow_html:
     toc: yes
