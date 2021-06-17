@@ -102,10 +102,9 @@ cut_tree <- cutree(hcl, k=100)
 table(cut_tree) 
 hist(as.vector(table(cut_tree)), breaks=100)
 
-# 
+# table
 table(cut_tree)
-cut_tree
-
+head(cut_tree)
 
 # this is not a good method to cluster
 ```
@@ -115,7 +114,7 @@ cut_tree
 ```{r}
 # input tab delimited table
 ml_dist <- read.table("data/Biobank_align_mafft.fasta.mldist.tsv", sep="\t", header = F)
-head(ml_dist)
+# head(ml_dist)
 
 # set row and column name
 ml_dist %<>% select(-V531)
