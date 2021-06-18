@@ -30,9 +30,49 @@ library(gtools)
 library(devtools)
 library(openxlsx)
 library(ape)
+
+## theme for ggplot
+mytheme <- theme_bw() + 
+  theme(plot.title = element_text(size = 19,hjust = 0.5, family="serif")) + 
+  theme(axis.title.x = element_text(size = 17,hjust = 0.5, family="serif")) + 
+  theme(axis.title.y = element_text(size = 17,hjust = 0.5, family="serif")) + 
+  theme(axis.text.x = element_text(hjust = 0.5, vjust=0.3,size=13, family="serif"))+
+  theme(axis.text.y = element_text(size=10, family="serif"))+
+  theme(panel.grid.major = element_blank()) +
+  theme(panel.grid.minor = element_blank(),panel.background=element_blank(),panel.border=element_blank(),plot.background=element_blank()) +
+  theme(axis.ticks = element_line(size = 1.1))
+  
+mytheme_2d <- theme_bw() + 
+  theme(plot.title = element_text(size = 19,hjust = 0.5, family="serif")) + 
+  theme(axis.title.x = element_text(size = 17,hjust = 0.5, family="serif")) + 
+  theme(axis.title.y = element_text(size = 17,hjust = 0.5, family="serif")) + 
+  theme(axis.text.x = element_text(hjust = 0.5, vjust=0.3,size=13, family="serif"))+
+  theme(axis.text.y = element_text(size=13, family="serif"))+
+  theme(panel.grid.major = element_blank()) +
+  theme(panel.grid.minor = element_blank(),panel.background=element_blank(),plot.background=element_blank()) +
+  theme(axis.ticks = element_line(size = 1.1))
+
+
+# color collection
+my_color_collection <- c(
+  "#CBD588", "#5F7FC7", "orange", "#AD6F3B", "#673770", 
+  "#D14285", "#652926", "#C84248", "#8569D5", "#5E738F",
+  "#D1A33D", "#8A7C64", "#599861","#616163", "#FFCDB2",
+  "#6D9F71", "#242F40",
+   "#CCA43B", "#F92A82", "#ED7B84", "#7EB77F", 
+  "#DEC4A1", "#E5D1D0", '#0E8482', '#C9DAEA', '#337357', 
+  '#95C623', '#E55812', '#04471C', '#F2D7EE', '#D3BCC0', 
+  '#A5668B', '#69306D', '#0E103D', '#1A535C', '#4ECDC4', 
+  '#F7FFF7', '#FF6B6B', '#FFE66D', '#6699CC', '#FFF275', 
+  '#FF8C42', '#FF3C38', '#A23E48', '#000000', '#CF5C36', 
+  '#EEE5E9', '#7C7C7C', '#EFC88B', '#2E5266', '#6E8898', 
+  '#9FB1BC', '#D3D0CB', '#E2C044', '#5BC0EB', '#FDE74C', 
+  '#9BC53D', '#E55934', '#FA7921', "#CD9BCD", "#508578", "#DA5724")
+
+
 ```
 
-## 1. Data input
+## 1. Data input and pre-processing for phylogenetic tree construction
 ```{r}
 df_Biobank <- read.csv('data/biobank.umap.16sSeqs.csv')
 
@@ -40,9 +80,18 @@ dim(df_Biobank)
 colnames(df_Biobank)
 head(df_Biobank)
 
+
+# how many species
+df_species <- df_Biobank %>% group_by(species) %>% summarise(number=n_distinct(species))
+dim(df_species)
+head(df_species)
+
 # get id and sequence
 # id is seq_id + species
-phylo_Biobank <- df_Biobank %>% unite(phy_id,c("seq_id",'species'),sep="_")
+phylo_Biobank <- df_Biobank %>% unite(phy_id,c("seq_id",'species'),sep="_", remove=F)
+phylo_Biobank$species <- gsub("\\[","",phylo_Biobank$species)
+phylo_Biobank$species <- gsub("]","",phylo_Biobank$species)
+colnames(phylo_Biobank)
 # remove space in the id for downstream
 phylo_Biobank$phy_id <- gsub(" ","_",phylo_Biobank$phy_id) 
 # remove "[" and "]"
@@ -57,7 +106,194 @@ write.table(col2_Biobank, file='input_for_fasta_conversion.txt', quote=FALSE, se
 
 ```
 
-## 2. Input the tree and cut the tree
+## 2. UMAP plotting
+
+```{r}
+# UMAP plotting
+ggplot(df_Biobank, aes(x=umapA1, y=umapA2)) +
+  xlab('\n umap A1')+
+  ylab("umap A2 \n") +
+  geom_point(aes(fill = genus), shape = 21 ,size=4, alpha=0.9) +
+  scale_fill_manual(values = my_color_collection)+
+  ggtitle(paste0("UMAP coordination"," \n")) +
+  # scale_x_continuous(limits = c(0, max(df_cen_wb$Degree))) +
+  # scale_y_continuous(limits = c(0, max(df_cen_wb$Betweenness))) +
+  theme(legend.text=element_text(size=13)) + 
+  # theme(legend.position="top") +
+  # theme(legend.title=element_blank()) +
+  guides(colour = guide_legend(override.aes = list(size=8), reverse = TRUE))+
+  guides(size=FALSE) +
+  mytheme_2d
+
+plot_UMAP <- function(df_Biobank){
+  ggplot(df_Biobank, aes(x=umapA1, y=umapA2)) +
+    xlab('\n umap A1')+
+    ylab("umap A2 \n") +
+    geom_point(aes(fill = genus), shape = 21 ,size=4, alpha=0.9) +
+    scale_fill_manual(values = my_color_collection)+
+    ggtitle(paste0("UMAP coordination"," \n")) +
+    # scale_x_continuous(limits = c(0, max(df_cen_wb$Degree))) +
+    # scale_y_continuous(limits = c(0, max(df_cen_wb$Betweenness))) +
+    theme(legend.text=element_text(size=13)) + 
+    # theme(legend.position="top") +
+    # theme(legend.title=element_blank()) +
+    guides(colour = guide_legend(override.aes = list(size=8), reverse = TRUE))+
+    guides(size=FALSE) +
+    mytheme_2d
+}
+
+
+```
+
+## 2.2. K-means clustering for UMAP distribution
+
+(1) First, using the elbow method to find the optimal number of clusters \
+Within-Cluster-Sum-of-Squares (WCSS) is the sum of squares of the distances of each data point in all clusters to their respective centroids. \
+
+(2) 
+```{r}
+# First, using the elbow method to find the optimal number of clusters
+set.seed(6)
+wcss = vector()
+
+colnames(df_Biobank)
+k_dataset <- phylo_Biobank %>% select(phy_id, umapA1, umapA2)
+k_dataset <- tibble::column_to_rownames(k_dataset, var="phy_id")
+
+# 100 clusters
+n_clu = 100
+for (i in 1:n_clu) wcss[i] = sum(kmeans(k_dataset, i)$withinss)
+plot(1:n_clu,
+     wcss,
+     type = 'b',
+     main = paste('The Elbow Method'),
+     xlab = 'Number of clusters',
+     ylab = 'WCSS')
+
+# Fitting K-Means to the dataset
+set.seed(29)
+kmeans = kmeans(x = k_dataset, centers = n_clu)
+y_kmeans = kmeans$cluster
+
+# Visualising the clusters
+library(cluster)
+# All observation are represented by points in the plot, using principal components or multidimensional scaling.
+clusplot(k_dataset,
+         y_kmeans,
+         lines = 0,
+         shade = TRUE,
+         color = TRUE,
+         labels = 0,
+         plotchar = FALSE,
+         span = TRUE,
+         # main = paste('Clusters of strains with UMAP'),
+         main = NA,
+         xlab = 'PC1',
+         ylab = 'PC2') 
+
+
+# get the centroid and the closest id's for 100 clusters
+kmeans$centers
+
+center_strains <- vector()
+min_ss <- rep(Inf, n_clu)  # minimum sum of square of distance from centroid
+
+for (i in 1:n_clu){
+  print(i)
+  centroid_xy <- (kmeans$centers)[i,]
+  for (j in 1:dim(k_dataset)[1]){
+    point_xy <- k_dataset[j,]
+    ss <- sum((centroid_xy - point_xy)^2)
+    if (ss < min_ss[i]){
+      min_ss[i] <- ss
+      center_strains[i] <- rownames(k_dataset[j,])
+      # print(center_strains[i])
+    }
+  }
+}
+
+kmeans$cluster[center_strains] # center strains belong to each cluster
+center_strains # confirmed
+length(center_strains)
+
+# Plot UMAP with cluster center strains
+plot_UMAP(phylo_Biobank %>% filter(phy_id %in% center_strains))
+
+# number of species
+df_center_umap <- phylo_Biobank %>% filter(phy_id %in% center_strains)
+df_center_umap %>% select(species) %>% unique() %>% dim() # 51 species
+df_umap_distinct <- df_center_umap %>% count(species)
+hist(df_umap_distinct$n, main="Histogram of number of same species", xlab="Number of same species")
+
+```
+
+Try it again with 20 clusters
+```{r}
+# 20 clusters
+set.seed(6)
+wcss = vector()
+n_clu = 20
+for (i in 1:n_clu) wcss[i] = sum(kmeans(k_dataset, i)$withinss)
+plot(1:n_clu,
+     wcss,
+     type = 'b',
+     main = paste('The Elbow Method'),
+     xlab = 'Number of clusters',
+     ylab = 'WCSS')
+
+# Fitting K-Means to the dataset
+set.seed(29)
+kmeans = kmeans(x = k_dataset, centers = n_clu)
+y_kmeans = kmeans$cluster
+
+# Visualising the clusters
+library(cluster)
+# All observation are represented by points in the plot, using principal components or multidimensional scaling.
+clusplot(k_dataset,
+         y_kmeans,
+         lines = 0,
+         shade = TRUE,
+         color = TRUE,
+         labels = 0,
+         plotchar = FALSE,
+         span = TRUE,
+         # main = paste('Clusters of strains with UMAP'),
+         main = NA,
+         xlab = 'PC1',
+         ylab = 'PC2') 
+
+
+# get the centroid and the closest id's for 100 clusters
+kmeans$centers
+
+center_strains <- vector()
+min_ss <- rep(Inf, n_clu)  # minimum sum of square of distance from centroid
+
+for (i in 1:n_clu){
+  print(i)
+  centroid_xy <- (kmeans$centers)[i,]
+  for (j in 1:dim(k_dataset)[1]){
+    point_xy <- k_dataset[j,]
+    ss <- sum((centroid_xy - point_xy)^2)
+    if (ss < min_ss[i]){
+      min_ss[i] <- ss
+      center_strains[i] <- rownames(k_dataset[j,])
+      # print(center_strains[i])
+    }
+  }
+}
+
+kmeans$cluster[center_strains] # center strains belong to each cluster
+center_strains # confirmed
+length(center_strains)
+
+# Plot UMAP with cluster center strains
+plot_UMAP(phylo_Biobank %>% filter(phy_id %in% center_strains))
+
+```
+
+
+## 3. Phylogenetic tree construction and cut the tree / clustering
 
 ```{r}
 phy_tree <- ape::read.tree("data/Biobank_align_mafft.fasta.treefile_rooted.nwk")
@@ -136,6 +372,7 @@ K-means clustering
 ```{r}
 # distance matrix has 529 x 529 dimension
 library(FCPS)
+
 kmeans_100 <- kmeansClustering(mat_dist, ClusterNo=100, RandomNo=1, PlotIt= T, Verbose = T)
 
 kmeans_cls <- kmeans_100$Cls
@@ -143,6 +380,44 @@ table(kmeans_cls)
 
 # Histogram of # of strains belonging to each cluster
 hist(as.vector(table(kmeans_cls)), breaks=100)
+
+# Let's get the list of center ids
+# kmeans_100
+
+kmeans_100$centerids
+phy_id_list <- names(kmeans_cls[kmeans_100$centerids])
+
+# function to get the centroid ids
+get_centroids <- function(mat_dist, num_cluster=100){
+  kmeans_100 <- kmeansClustering(mat_dist, ClusterNo=num_cluster, RandomNo=1, PlotIt= T, Verbose = T)
+  kmeans_cls <- kmeans_100$Cls
+  table(kmeans_cls)
+  
+  # Let's get the list of center ids
+  phy_id_list <- names(kmeans_cls[kmeans_100$centerids])
+  return(phy_id_list)
+}
+
+# get 100 centroids and plot UMAP
+phy_id_list <- get_centroids(mat_dist, num_cluster=100)
+
+df_centroid_100 <- phylo_Biobank %>% filter(phy_id %in% phy_id_list)
+
+plot_UMAP(phylo_Biobank %>% filter(phy_id %in% phy_id_list))
+
+# number of species
+df_center_phy <- phylo_Biobank %>% filter(phy_id %in% phy_id_list)
+df_center_phy %>% select(species) %>% unique() %>% dim() # 47 species
+df_phy_distinct <- df_center_phy %>% count(species)
+hist(df_phy_distinct$n, main="Histogram of number of same species", xlab="Number of same species")
+
+# get 80 centroids and plot UMAP
+phy_id_list <- get_centroids(mat_dist, num_cluster=80)
+length(phy_id_list)
+
+
+# See what species the centerids are
+phylo_Biobank %>% filter(phy_id %in% phy_id_list) %>% select(phy_id, species) %>% arrange(species)
 
 # looking into the clusters
 kmeans_cls[kmeans_cls==90]
@@ -154,6 +429,7 @@ colnames(df_cls)
 
 
 df_cls %>% filter(str_detect(id, "Bacteroides_fragilis"))
+
 
 ```
 
