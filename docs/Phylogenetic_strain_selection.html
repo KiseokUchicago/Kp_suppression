@@ -385,7 +385,7 @@ div.tocify {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2021-06-17
+<strong>Last updated:</strong> 2021-06-18
 </p>
 <p>
 <strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
@@ -476,16 +476,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomKiseokUchicagoKpsuppressiontreea223d639641b9478ba976eb97141c62a8881ff18targetblanka223d63a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/KiseokUchicago/Kp_suppression/tree/a223d639641b9478ba976eb97141c62a8881ff18" target="_blank">a223d63</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomKiseokUchicagoKpsuppressiontree2e96eca3c4540502680907cb49d2d96a03d69728targetblank2e96ecaa"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/KiseokUchicago/Kp_suppression/tree/2e96eca3c4540502680907cb49d2d96a03d69728" target="_blank">2e96eca</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomKiseokUchicagoKpsuppressiontreea223d639641b9478ba976eb97141c62a8881ff18targetblanka223d63a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomKiseokUchicagoKpsuppressiontree2e96eca3c4540502680907cb49d2d96a03d69728targetblank2e96ecaa" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/KiseokUchicago/Kp_suppression/tree/a223d639641b9478ba976eb97141c62a8881ff18" target="_blank">a223d63</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/KiseokUchicago/Kp_suppression/tree/2e96eca3c4540502680907cb49d2d96a03d69728" target="_blank">2e96eca</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -496,6 +496,11 @@ Ignored files:
     Ignored:    .Rproj.user/
 
 Untracked files:
+    Untracked:  UMAP_100centroid_kmeans.pdf
+    Untracked:  UMAP_all.pdf
+    Untracked:  UMAP_clustering_kmeans.pdf
+    Untracked:  UMAP_umapclustering_100.pdf
+    Untracked:  UMAP_umapclustering_20.pdf
     Untracked:  data/Biobank_align_mafft.fasta.mldist.tsv
     Untracked:  data/Biobank_align_mafft.fasta.treefile.nwk
     Untracked:  data/Biobank_align_mafft.fasta.treefile_rooted.nwk
@@ -539,6 +544,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/KiseokUchicago/Kp_suppression/blob/2e96eca3c4540502680907cb49d2d96a03d69728/analysis/Phylogenetic_strain_selection.Rmd" target="_blank">2e96eca</a>
+</td>
+<td>
+KiseokUchicago
+</td>
+<td>
+2021-06-18
+</td>
+<td>
+almost
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/KiseokUchicago/Kp_suppression/b74f2e41b55372e446ae0145511f39c17512de42/docs/Phylogenetic_strain_selection.html" target="_blank">b74f2e4</a>
+</td>
+<td>
+KiseokUchicago
+</td>
+<td>
+2021-06-17
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -612,10 +651,48 @@ library(reshape2)
 library(gtools)
 library(devtools)
 library(openxlsx)
-library(ape)</code></pre>
+library(ape)
+
+## theme for ggplot
+mytheme &lt;- theme_bw() + 
+  theme(plot.title = element_text(size = 19,hjust = 0.5, family=&quot;serif&quot;)) + 
+  theme(axis.title.x = element_text(size = 17,hjust = 0.5, family=&quot;serif&quot;)) + 
+  theme(axis.title.y = element_text(size = 17,hjust = 0.5, family=&quot;serif&quot;)) + 
+  theme(axis.text.x = element_text(hjust = 0.5, vjust=0.3,size=13, family=&quot;serif&quot;))+
+  theme(axis.text.y = element_text(size=10, family=&quot;serif&quot;))+
+  theme(panel.grid.major = element_blank()) +
+  theme(panel.grid.minor = element_blank(),panel.background=element_blank(),panel.border=element_blank(),plot.background=element_blank()) +
+  theme(axis.ticks = element_line(size = 1.1))
+  
+mytheme_2d &lt;- theme_bw() + 
+  theme(plot.title = element_text(size = 19,hjust = 0.5, family=&quot;serif&quot;)) + 
+  theme(axis.title.x = element_text(size = 17,hjust = 0.5, family=&quot;serif&quot;)) + 
+  theme(axis.title.y = element_text(size = 17,hjust = 0.5, family=&quot;serif&quot;)) + 
+  theme(axis.text.x = element_text(hjust = 0.5, vjust=0.3,size=13, family=&quot;serif&quot;))+
+  theme(axis.text.y = element_text(size=13, family=&quot;serif&quot;))+
+  theme(panel.grid.major = element_blank()) +
+  theme(panel.grid.minor = element_blank(),panel.background=element_blank(),plot.background=element_blank()) +
+  theme(axis.ticks = element_line(size = 1.1))
+
+
+# color collection
+my_color_collection &lt;- c(
+  &quot;#CBD588&quot;, &quot;#5F7FC7&quot;, &quot;orange&quot;, &quot;#AD6F3B&quot;, &quot;#673770&quot;, 
+  &quot;#D14285&quot;, &quot;#652926&quot;, &quot;#C84248&quot;, &quot;#8569D5&quot;, &quot;#5E738F&quot;,
+  &quot;#D1A33D&quot;, &quot;#8A7C64&quot;, &quot;#599861&quot;,&quot;#616163&quot;, &quot;#FFCDB2&quot;,
+  &quot;#6D9F71&quot;, &quot;#242F40&quot;,
+   &quot;#CCA43B&quot;, &quot;#F92A82&quot;, &quot;#ED7B84&quot;, &quot;#7EB77F&quot;, 
+  &quot;#DEC4A1&quot;, &quot;#E5D1D0&quot;, &#39;#0E8482&#39;, &#39;#C9DAEA&#39;, &#39;#337357&#39;, 
+  &#39;#95C623&#39;, &#39;#E55812&#39;, &#39;#04471C&#39;, &#39;#F2D7EE&#39;, &#39;#D3BCC0&#39;, 
+  &#39;#A5668B&#39;, &#39;#69306D&#39;, &#39;#0E103D&#39;, &#39;#1A535C&#39;, &#39;#4ECDC4&#39;, 
+  &#39;#F7FFF7&#39;, &#39;#FF6B6B&#39;, &#39;#FFE66D&#39;, &#39;#6699CC&#39;, &#39;#FFF275&#39;, 
+  &#39;#FF8C42&#39;, &#39;#FF3C38&#39;, &#39;#A23E48&#39;, &#39;#000000&#39;, &#39;#CF5C36&#39;, 
+  &#39;#EEE5E9&#39;, &#39;#7C7C7C&#39;, &#39;#EFC88B&#39;, &#39;#2E5266&#39;, &#39;#6E8898&#39;, 
+  &#39;#9FB1BC&#39;, &#39;#D3D0CB&#39;, &#39;#E2C044&#39;, &#39;#5BC0EB&#39;, &#39;#FDE74C&#39;, 
+  &#39;#9BC53D&#39;, &#39;#E55934&#39;, &#39;#FA7921&#39;, &quot;#CD9BCD&quot;, &quot;#508578&quot;, &quot;#DA5724&quot;)</code></pre>
 </div>
-<div id="data-input" class="section level2">
-<h2>1. Data input</h2>
+<div id="data-input-and-pre-processing-for-phylogenetic-tree-construction" class="section level2">
+<h2>1. Data input and pre-processing for phylogenetic tree construction</h2>
 <pre class="r"><code>df_Biobank &lt;- read.csv(&#39;data/biobank.umap.16sSeqs.csv&#39;)
 
 dim(df_Biobank)</code></pre>
@@ -653,10 +730,30 @@ dim(df_Biobank)</code></pre>
 4  ATGAAGAGTTTGATCCTGGCTCAGGATGAACGCTAGCTACAGGCTTAACACATGCAAGTCGAGGGGCAGCATGGTCTTAGCTTGCTAAGGCTGATGGCGACCGGCGCACGGGTGAGTAACACGTATCCAACCTGCCGTCTACTCTTGGCCAGCCTTCTGAAAGGAAGATTAATCCAGGATGGGATCATGAGTTCACATGTCCGCATGATTAAAGGTATTTTCCGGTAGACGATGGGGATGCGTTCCATTAGATAGTAGGCGGGGTAACGGCCCACCTAGTCAACGATGGATAGGGGTTCTGAGAGGAAGGTCCCCCACATTGGAACTGAGACACGGTCCAAACTCCTACGGGAGGCAGCAGTGAGGAATATTGGTCAATGGGCGATGGCCTGAACCAGCCAAGTAGCGTGAAGGATGACTGCCCTATGGGTTGTAAACTTCTTTTATAAAGGAATAAAGTCGGGTATGCATACCCGTTTGCATGTACTTTATGAATAAGGATCGGCTAACTCCGTGCCAGCAGCCGCGGTAATACGGAGGATCCGAGCGTTATCCGGATTTATTGGGTTTAAAGGGAGCGTAGATGGATGTTTAAGTCAGTTGTGAAAGTTTGCGGCTCAACCGTAAAATTGCAGTTGATACTGGATGTCTTGAGTGCAGTTGAGGCAGGCGGAATTCGTGGTGTAGCGGTGAAATGCTTAGATATCACGAAGAACTCCGATTGCGAAGGCAGCCTGCTAAGCTGCAACTGACATTGAGGCTCGAAAGTGTGGGTATCAAACAGGATTAGATACCCTGGTAGTCCACACGGTAAACGATGAATACTCGCTGTTTGCGATATACGGCAAGCGGCCAAGCGAAAGCGTTAAGTATTCCACCTGGGGAGTACGCCGGCAACGGTGAAACTCAAAGGAATTGACGGGGGCCCGCACAAGCGGAGGAACATGTGGTTTAATTCGATGATACGCGAGGAACCTTACCCGGGCTTAAATTGCACTCGAATGATCCGGAAACGGTTCAGCTAGCAATAGCGAGTGTGAAGGTGCTGCATGGTTGTCGTCAGCTCGTGCCGTGAGGTGTCGGCTTAAGTGCCATAACGAGCGCAACCCTTGTTGTCAGTTACTAACAGGTGATGCTGAGGACTCTGACAAGACTGCCATCGTAAGATGTGAGGAAGGTGGGGATGACGTCAAATCAGCACGGCCCTTACGTCCGGGGCTACACACGTGTTACAATGGGGGGTACAGAGGGCCGCTACCACGCGAGTGGATGCCAATCCCTAAAACCCCTCTCAGTTCGGACTGGAGTCTGCAACCCGACTCCACGAAGCTGGATTCGCTAGTAATCGCGCATCAGCCACGGCGCGGTGAATACGTTCCCGGGCCTTGTACACACCGCCCGTCAAGCCATGGGAGCCGGGGGTACCTGAAGTGCGTAACCGCGAGGATCGCCCTAGGGTAAAACTGGTGACTGGGGCTAAGTCGTAACAAGGTAGCCGTACCGGAAGGTGCGGCTGGAACACCTCCTT
 5 ATGAGAGTTTGATCCTGGCTCAGGATGAACGCTGGCGGCGTGCTTAACACATGCAAGTCGAACGAAACACCTTATTTGATTTTCTTCGGAACTGAAGATTTGGTGATTGAGTGGCGGACGGGTGAGTAACGCGTGGGTAACCTGCCCTGTACAGGGGGATAACAGTCAGAAATGACTGCTAATACCGCATAAGACCACAGCACCGCATGGTGCAGGGGTAAAAACTCCGGTGGTACAGGATGGACCCGCGTCTGATTAGCTGGTTGGTGAGGTAACGGCTCACCAAGGCGACGATCAGTAGCCGGCTTGAGAGAGTGAACGGCCACATTGGGACTGAGACACGGCCCAAACTCCTACGGGAGGCAGCAGTGGGGAATATTGCACAATGGGGGAAACCCTGATGCAGCGACGCCGCGTGAGTGAAGAAGTATCTCGGTATGTAAAGCTCTATCAGCAGGGAAGAAAATGACGGTACCTGACTAAGAAGCCCCGGCTAACTACGTGCCAGCAGCCGCGGTAATACGTAGGGGGCAAGCGTTATCCGGAATTACTGGGTGTAAAGGGTGCGTAGGTGGTATGGCAAGTCAGAAGTGAAAACCCAGGGCTTAACTCTGGGACTGCTTTTGAAACTGTCAGACTAGAGTGCAGGAGAGGTAAGCGGAATTCCTAGTGTAGCGGTGAAATGCGTAGATATTAGGAGGAACATCAGTGGCGAAGGCGGCTTACTGGACTGAAACTGACACTGAGGCACGAAAGCGTGGGGAGCAAACAGGATTAGATACCCTGGTAGTCCACGCCGTAAACGATGAATACTAGGTGTCGGGGCCGTAGAGGCTTCGGTGCCGCAGCCAACGCAGTAAGTATTCCACCTGGGGAGTACGTTCGCAAGAATGAAACTCAAAGGAATTGACGGGGACCCGCACAAGCGGTGGAGCATGTGGTTTAATTCGAAGCAACGCGAAGAACCTTACCTGGTCTTGACATCCTTCTGACCGGTCCTTAACCGGACCTTTCCTTCGGGACAGGAGTGACAGGTGGTGCATGGTTGTCGTCAGCTCGTGTCGTGAGATGTTGGGTTAAGTCCCGCAACGAGCGCAACCCCTATCTTTAGTAGCCAGCATATAAGGTGGGCACTCTAGAGAGACTGCCAGGGATAACCTGGAGGAAGGTGGGGACGACGTCAAATCATCATGCCCCTTATGACCAGGGCTACACACGTGCTACAATGGCGTAAACAGAGGGAAGCAGCCTCGTGAGAGTGAGCAAATCCCAAAAATAACGTCTCAGTTCGGATTGTAGTCTGCAACTCGACTACATGAAGCTGGAATCGCTAGTAATCGCGAATCAGAATGTCGCGGTGAATACGTTCCCGGGTCTTGTACACACCGCCCGTCACACCATGGGAGTCAGTAACGCCCGAAGTCAGTGACCCAACCGTAAGGAGGGAGCTGCCGAAGGCGGGACCGATAACTGGGGTGAAGTCGTAACAAGGTAGCCGTATCGGAAGGTGCGGCTGGATCACCTCCTTT
 6                                                                                                                                                                                                                                                                                                                                                                                                                      ATGAAGAGTTTGATCCTGGCTCAGGATGAACGCTAGCTACAGGCTTAACACATGCAAGTCGAGGGGCAGCATGGTCTTAGCTTGCTAAGGCCGATGGCGACCGGCGCACGGGTGAGTAACACGTATCCAACCTGCCGTCTACTCTTGGACAGCCTTCTGAAAGGAAGATTAATACAAGATGGCATCATGAGTCCGCATGTTCACATGATTAAAGGTATTCCGGTAGACGATGGGGATGCGTTCCATTAGATAGTAGGCGGGGTAACGGCCCACCTAGTCTTCGATGGATAGGGGTTCTGAGAGGAAGGTCCCCCACATTGGAACTGAGACACGGTCCAAACTCCTACGGGAGGCAGCAGTGAGGAATATTGGTCAATGGGCGAGAGCCTGAACCAGCCAAGTAGCGTGAAGGATGACTGCCCTATGGGTTGTAAACTTCTTTTATAAAGGAATAAAGTCGGGTATGCATACCCGTTTGCATGTACTTTATGAATAAGGATCGGCTAACTCCGTGCCAGCAGCCGCGGTAATACGGAGGATCCGAGCGTTATCCGGATTTATTGGGTTTAAAGGGAGCGTAGATGGATGTTTAAGTCAGTTGTGAAAGTTTGCGGCTCAACCGTAAAATTGCAGTTGATACTGGATATCTTGAGTGCAGTTGAGGCAGGCGGAATTCGTGGTGTAGCGGTGAAATGCTTAGATATCACGAAGAACTCCGATTGCGAAGGCAGCCTGCTAAGCTGCAACTGACATTGAGGCTCGAAAGTGTGGGTATCAAACAGGATTAGATACCCTGGTAGTCCACACGGTAAACGATGAATACTCGCTGTTTGCGATATACGGCAAGCGGCCAAGCGAAAGCGTTAAGTATTCCACCTGGGGAGTACGCCGGCAACGGTGAAACTCAAAGGAATTGACGGGGGCCCGCACAAGCGGAGGAACATGTGGTTTAATTCGATGATACGCGAGGAACCTTACCCGGGCTTAAATTGCAGATGAATTACGGTGAAAGCCGTAAGCCGCAAGGCATCTGTGAAGGTGCTGCATGGTTGTCGTCAGCTCGTGCCGTGAGGTGTCGGCTTAAGTGCCATAACGAGCGCAACCCTTGTTGTCAGTTACTAACA</code></pre>
+<pre class="r"><code># how many species
+df_species &lt;- df_Biobank %&gt;% group_by(species) %&gt;% summarise(number=n_distinct(species))
+dim(df_species)</code></pre>
+<pre><code>[1] 117   2</code></pre>
+<pre class="r"><code>head(df_species)</code></pre>
+<pre><code># A tibble: 6 x 2
+  species                       number
+  &lt;chr&gt;                          &lt;int&gt;
+1 [Clostridium] aldenense            1
+2 [Clostridium] celerecrescens       1
+3 [Clostridium] clostridioforme      1
+4 [Clostridium] innocuum             1
+5 [Clostridium] scindens             1
+6 [Clostridium] symbiosum            1</code></pre>
 <pre class="r"><code># get id and sequence
 # id is seq_id + species
-phylo_Biobank &lt;- df_Biobank %&gt;% unite(phy_id,c(&quot;seq_id&quot;,&#39;species&#39;),sep=&quot;_&quot;)
-# remove space in the id for downstream
+phylo_Biobank &lt;- df_Biobank %&gt;% unite(phy_id,c(&quot;seq_id&quot;,&#39;species&#39;),sep=&quot;_&quot;, remove=F)
+phylo_Biobank$species &lt;- gsub(&quot;\\[&quot;,&quot;&quot;,phylo_Biobank$species)
+phylo_Biobank$species &lt;- gsub(&quot;]&quot;,&quot;&quot;,phylo_Biobank$species)
+colnames(phylo_Biobank)</code></pre>
+<pre><code> [1] &quot;phy_id&quot;       &quot;seq_id&quot;       &quot;umapA1&quot;       &quot;umapA2&quot;       &quot;tiplabel&quot;    
+ [6] &quot;msk_id&quot;       &quot;length_bp&quot;    &quot;phylum&quot;       &quot;class&quot;        &quot;order&quot;       
+[11] &quot;family&quot;       &quot;genus&quot;        &quot;species&quot;      &quot;nuc_sequence&quot;</code></pre>
+<pre class="r"><code># remove space in the id for downstream
 phylo_Biobank$phy_id &lt;- gsub(&quot; &quot;,&quot;_&quot;,phylo_Biobank$phy_id) 
 # remove &quot;[&quot; and &quot;]&quot;
 phylo_Biobank$phy_id &lt;- gsub(&quot;\\[&quot;,&quot;&quot;,phylo_Biobank$phy_id)
@@ -682,8 +779,787 @@ dim(col2_Biobank)</code></pre>
 6                                                                                                                                                                                                                                                                                                                                                                                                                      ATGAAGAGTTTGATCCTGGCTCAGGATGAACGCTAGCTACAGGCTTAACACATGCAAGTCGAGGGGCAGCATGGTCTTAGCTTGCTAAGGCCGATGGCGACCGGCGCACGGGTGAGTAACACGTATCCAACCTGCCGTCTACTCTTGGACAGCCTTCTGAAAGGAAGATTAATACAAGATGGCATCATGAGTCCGCATGTTCACATGATTAAAGGTATTCCGGTAGACGATGGGGATGCGTTCCATTAGATAGTAGGCGGGGTAACGGCCCACCTAGTCTTCGATGGATAGGGGTTCTGAGAGGAAGGTCCCCCACATTGGAACTGAGACACGGTCCAAACTCCTACGGGAGGCAGCAGTGAGGAATATTGGTCAATGGGCGAGAGCCTGAACCAGCCAAGTAGCGTGAAGGATGACTGCCCTATGGGTTGTAAACTTCTTTTATAAAGGAATAAAGTCGGGTATGCATACCCGTTTGCATGTACTTTATGAATAAGGATCGGCTAACTCCGTGCCAGCAGCCGCGGTAATACGGAGGATCCGAGCGTTATCCGGATTTATTGGGTTTAAAGGGAGCGTAGATGGATGTTTAAGTCAGTTGTGAAAGTTTGCGGCTCAACCGTAAAATTGCAGTTGATACTGGATATCTTGAGTGCAGTTGAGGCAGGCGGAATTCGTGGTGTAGCGGTGAAATGCTTAGATATCACGAAGAACTCCGATTGCGAAGGCAGCCTGCTAAGCTGCAACTGACATTGAGGCTCGAAAGTGTGGGTATCAAACAGGATTAGATACCCTGGTAGTCCACACGGTAAACGATGAATACTCGCTGTTTGCGATATACGGCAAGCGGCCAAGCGAAAGCGTTAAGTATTCCACCTGGGGAGTACGCCGGCAACGGTGAAACTCAAAGGAATTGACGGGGGCCCGCACAAGCGGAGGAACATGTGGTTTAATTCGATGATACGCGAGGAACCTTACCCGGGCTTAAATTGCAGATGAATTACGGTGAAAGCCGTAAGCCGCAAGGCATCTGTGAAGGTGCTGCATGGTTGTCGTCAGCTCGTGCCGTGAGGTGTCGGCTTAAGTGCCATAACGAGCGCAACCCTTGTTGTCAGTTACTAACA</code></pre>
 <pre class="r"><code>write.table(col2_Biobank, file=&#39;input_for_fasta_conversion.txt&#39;, quote=FALSE, sep=&#39;\t&#39;, row.names = F, col.names=F)</code></pre>
 </div>
-<div id="input-the-tree-and-cut-the-tree" class="section level2">
-<h2>2. Input the tree and cut the tree</h2>
+<div id="umap-plotting" class="section level2">
+<h2>2. UMAP plotting</h2>
+<pre class="r"><code># UMAP plotting
+ggplot(df_Biobank, aes(x=umapA1, y=umapA2)) +
+  xlab(&#39;\n umap A1&#39;)+
+  ylab(&quot;umap A2 \n&quot;) +
+  geom_point(aes(fill = genus), shape = 21 ,size=4, alpha=0.9) +
+  scale_fill_manual(values = my_color_collection)+
+  ggtitle(paste0(&quot;UMAP coordination&quot;,&quot; \n&quot;)) +
+  # scale_x_continuous(limits = c(0, max(df_cen_wb$Degree))) +
+  # scale_y_continuous(limits = c(0, max(df_cen_wb$Betweenness))) +
+  theme(legend.text=element_text(size=13)) + 
+  # theme(legend.position=&quot;top&quot;) +
+  # theme(legend.title=element_blank()) +
+  guides(colour = guide_legend(override.aes = list(size=8), reverse = TRUE))+
+  guides(size=FALSE) +
+  mytheme_2d</code></pre>
+<p><img src="figure/Phylogenetic_strain_selection.Rmd/unnamed-chunk-3-1.png" width="1056" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot_UMAP &lt;- function(df_Biobank){
+  ggplot(df_Biobank, aes(x=umapA1, y=umapA2)) +
+    xlab(&#39;\n umap A1&#39;)+
+    ylab(&quot;umap A2 \n&quot;) +
+    geom_point(aes(fill = genus), shape = 21 ,size=4, alpha=0.9) +
+    scale_fill_manual(values = my_color_collection)+
+    ggtitle(paste0(&quot;UMAP coordination&quot;,&quot; \n&quot;)) +
+    # scale_x_continuous(limits = c(0, max(df_cen_wb$Degree))) +
+    # scale_y_continuous(limits = c(0, max(df_cen_wb$Betweenness))) +
+    theme(legend.text=element_text(size=13)) + 
+    # theme(legend.position=&quot;top&quot;) +
+    # theme(legend.title=element_blank()) +
+    guides(colour = guide_legend(override.aes = list(size=8), reverse = TRUE))+
+    guides(size=FALSE) +
+    mytheme_2d
+}</code></pre>
+</div>
+<div id="k-means-clustering-for-umap-distribution" class="section level2">
+<h2>2.2. K-means clustering for UMAP distribution</h2>
+<ol style="list-style-type: decimal">
+<li><p>First, using the elbow method to find the optimal number of clusters<br />
+Within-Cluster-Sum-of-Squares (WCSS) is the sum of squares of the distances of each data point in all clusters to their respective centroids.<br />
+</p></li>
+<li></li>
+</ol>
+<pre class="r"><code># First, using the elbow method to find the optimal number of clusters
+set.seed(6)
+wcss = vector()
+
+colnames(df_Biobank)</code></pre>
+<pre><code> [1] &quot;seq_id&quot;       &quot;umapA1&quot;       &quot;umapA2&quot;       &quot;tiplabel&quot;     &quot;msk_id&quot;      
+ [6] &quot;length_bp&quot;    &quot;phylum&quot;       &quot;class&quot;        &quot;order&quot;        &quot;family&quot;      
+[11] &quot;genus&quot;        &quot;species&quot;      &quot;nuc_sequence&quot;</code></pre>
+<pre class="r"><code>k_dataset &lt;- phylo_Biobank %&gt;% select(phy_id, umapA1, umapA2)
+k_dataset &lt;- tibble::column_to_rownames(k_dataset, var=&quot;phy_id&quot;)
+
+# 100 clusters
+n_clu = 100
+for (i in 1:n_clu) wcss[i] = sum(kmeans(k_dataset, i)$withinss)
+plot(1:n_clu,
+     wcss,
+     type = &#39;b&#39;,
+     main = paste(&#39;The Elbow Method&#39;),
+     xlab = &#39;Number of clusters&#39;,
+     ylab = &#39;WCSS&#39;)</code></pre>
+<p><img src="figure/Phylogenetic_strain_selection.Rmd/unnamed-chunk-4-1.png" width="1056" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># Fitting K-Means to the dataset
+set.seed(29)
+kmeans = kmeans(x = k_dataset, centers = n_clu)
+y_kmeans = kmeans$cluster
+
+# Visualising the clusters
+library(cluster)
+# All observation are represented by points in the plot, using principal components or multidimensional scaling.
+clusplot(k_dataset,
+         y_kmeans,
+         lines = 0,
+         shade = TRUE,
+         color = TRUE,
+         labels = 0,
+         plotchar = FALSE,
+         span = TRUE,
+         # main = paste(&#39;Clusters of strains with UMAP&#39;),
+         main = NA,
+         xlab = &#39;PC1&#39;,
+         ylab = &#39;PC2&#39;) </code></pre>
+<p><img src="figure/Phylogenetic_strain_selection.Rmd/unnamed-chunk-4-2.png" width="1056" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># get the centroid and the closest id&#39;s for 100 clusters
+kmeans$centers</code></pre>
+<pre><code>         umapA1       umapA2
+1   -3.46683696   7.90930185
+2   -2.84710966   6.20400928
+3   -3.02872674   6.22079147
+4    1.87679995 -13.61810163
+5    0.52403568 -11.29365886
+6    1.77458500 -13.58405446
+7   -5.51849043  -5.24117348
+8   -5.36443173  -5.07259652
+9   -1.21108507 -11.30745401
+10  -3.22552780   7.36094931
+11  -1.68291823 -11.21770212
+12   0.62336978 -12.10052317
+13  -1.76575698   7.46283564
+14   0.11276739 -11.08553461
+15  -0.44755765 -13.80478890
+16  -3.28938061   5.68213533
+17  -3.11014548   5.25269527
+18  -0.67669070 -10.64034171
+19   5.95334978   1.13854949
+20   1.29979249 -11.42110133
+21  -0.37598376 -13.73284015
+22   2.12073235  10.40458090
+23  -4.28350383   5.42166218
+24  -3.23387960   5.27487262
+25  -2.40425809   5.39707666
+26  -2.58222667   5.27718590
+27   7.66053407   1.74156998
+28  -1.98234434   7.71962290
+29  -3.87501532   5.72744032
+30   6.18375806   6.62597843
+31  -3.26197877   6.75157236
+32  -2.97903480   7.03347439
+33   5.05393996   6.42153602
+34  -5.24522591  -4.94627533
+35   6.51284810   1.90201390
+36  -1.74636495   8.54755855
+37  -1.30855899   8.57420556
+38   1.94778996  10.43407628
+39   1.81251568 -13.66520024
+40  -2.50815126   6.55424999
+41  -4.76298507   7.54635294
+42  -1.22961313 -11.79310446
+43  -3.40329792   6.09919654
+44  -0.82681689 -11.36829898
+45  -0.17011971 -12.67248016
+46   1.55732051   6.93014522
+47   0.13617903 -10.91271508
+48  -1.48563238   8.79114670
+49  -1.85810109   6.65555277
+50  -2.97023115   5.62051785
+51   6.56417065  -0.03354242
+52  -2.46487080   4.86814730
+53  -2.71318660   7.40911819
+54   0.05040675   8.38770778
+55   1.67352639 -11.02851420
+56  -3.12874924   5.77911505
+57  -4.22785810   5.46359244
+58  -0.22609918 -11.68935125
+59  -2.61829280   5.48964314
+60  -2.05366635   7.30575148
+61   1.62826875   6.86197464
+62  -2.78157802   8.11919382
+63  -3.00588772   6.00256423
+64  -1.99708259 -11.00381474
+65  -1.02951586 -11.98279124
+66   1.50050147 -10.70483182
+67   0.63818241 -13.12020841
+68  -5.44003558  -5.14262751
+69   2.34344044 -11.38848742
+70  -1.13114801 -11.79755123
+71  -4.46682999   7.38193363
+72  -0.40585555 -11.56458157
+73  -1.52718275   8.82575595
+74  -1.45989873   8.72935790
+75  -4.53213396   8.78428815
+76  -3.51842218   5.96567695
+77  -4.08792857   5.62705706
+78   6.97566745   1.39406497
+79  -0.31013331 -13.61548366
+80  -5.51380908  -5.16740362
+81  -3.63757941   7.06861419
+82  -2.90118875   7.76979375
+83   2.29786646 -10.49222964
+84   1.58010475  -9.64660428
+85   2.02570661  10.17614630
+86  -4.17680229   5.53012718
+87  -2.76053082   5.28679817
+88   5.74468952   6.70021039
+89  -1.40774068   8.63866983
+90  -2.46678549   4.97195890
+91  -1.36444877   8.74577773
+92  -1.51774061   8.60406939
+93   1.18609672 -11.41849082
+94   1.71354156 -13.49575642
+95  -1.03063542 -12.07113871
+96  -0.13485841 -12.26774452
+97   1.12892203 -10.33602895
+98   2.25980085 -10.53172497
+99  -2.40835029   7.16321106
+100 -4.84593163   7.47841940</code></pre>
+<pre class="r"><code>center_strains &lt;- vector()
+min_ss &lt;- rep(Inf, n_clu)  # minimum sum of square of distance from centroid
+
+for (i in 1:n_clu){
+  print(i)
+  centroid_xy &lt;- (kmeans$centers)[i,]
+  for (j in 1:dim(k_dataset)[1]){
+    point_xy &lt;- k_dataset[j,]
+    ss &lt;- sum((centroid_xy - point_xy)^2)
+    if (ss &lt; min_ss[i]){
+      min_ss[i] &lt;- ss
+      center_strains[i] &lt;- rownames(k_dataset[j,])
+      # print(center_strains[i])
+    }
+  }
+}</code></pre>
+<pre><code>[1] 1
+[1] 2
+[1] 3
+[1] 4
+[1] 5
+[1] 6
+[1] 7
+[1] 8
+[1] 9
+[1] 10
+[1] 11
+[1] 12
+[1] 13
+[1] 14
+[1] 15
+[1] 16
+[1] 17
+[1] 18
+[1] 19
+[1] 20
+[1] 21
+[1] 22
+[1] 23
+[1] 24
+[1] 25
+[1] 26
+[1] 27
+[1] 28
+[1] 29
+[1] 30
+[1] 31
+[1] 32
+[1] 33
+[1] 34
+[1] 35
+[1] 36
+[1] 37
+[1] 38
+[1] 39
+[1] 40
+[1] 41
+[1] 42
+[1] 43
+[1] 44
+[1] 45
+[1] 46
+[1] 47
+[1] 48
+[1] 49
+[1] 50
+[1] 51
+[1] 52
+[1] 53
+[1] 54
+[1] 55
+[1] 56
+[1] 57
+[1] 58
+[1] 59
+[1] 60
+[1] 61
+[1] 62
+[1] 63
+[1] 64
+[1] 65
+[1] 66
+[1] 67
+[1] 68
+[1] 69
+[1] 70
+[1] 71
+[1] 72
+[1] 73
+[1] 74
+[1] 75
+[1] 76
+[1] 77
+[1] 78
+[1] 79
+[1] 80
+[1] 81
+[1] 82
+[1] 83
+[1] 84
+[1] 85
+[1] 86
+[1] 87
+[1] 88
+[1] 89
+[1] 90
+[1] 91
+[1] 92
+[1] 93
+[1] 94
+[1] 95
+[1] 96
+[1] 97
+[1] 98
+[1] 99
+[1] 100</code></pre>
+<pre class="r"><code>kmeans$cluster[center_strains] # center strains belong to each cluster</code></pre>
+<pre><code>           MSK1_25_Sellimonas_intestinalis 
+                                         1 
+                        TM121_Blautia_luti 
+                                         2 
+                        TM139_Blautia_luti 
+                                         3 
+                 MSK21_60_Prevotella_copri 
+                                         4 
+  210309-DFI.4.154A_Parabacteroides_merdae 
+                                         5 
+                 MSK21_56_Prevotella_copri 
+                                         6 
+              TM406_Escherichia_fergusonii 
+                                         7 
+                     MSK19_28_unclassified 
+                                         8 
+               MSK18_85_Bacteroides_caccae 
+                                         9 
+                   TM448_Dorea_longicatena 
+                                        10 
+         MSK18_37_Bacteroides_unclassified 
+                                        11 
+ 210120-DFI.1.157_Odoribacter_splanchnicus 
+                                        12 
+              MSK17_42_Eubacterium_rectale 
+                                        13 
+210123-DFI.3.77_Parabacteroides_distasonis 
+                                        14 
+            MSK16_49_Bacteroides_eggerthii 
+                                        15 
+                       TM175_Blautia_obeum 
+                                        16 
+                      TM100_Blautia_faecis 
+                                        17 
+     MSK18_17_Bacteroides_cellulosilyticus 
+                                        18 
+            FC22_108_Bifidobacterium_breve 
+                                        19 
+             MSK22_48_Bacteroides_vulgatus 
+                                        20 
+            MSK16_67_Bacteroides_eggerthii 
+                                        21 
+   MSK23_76_Erysipelatoclostridium_ramosum 
+                                        22 
+     TM184_Fusicatenibacter_saccharivorans 
+                                        23 
+                      TM134_Blautia_faecis 
+                                        24 
+                    TM104_Blautia_wexlerae 
+                                        25 
+                 MSK18_55_Blautia_wexlerae 
+                                        26 
+              TM236_Bifidobacterium_longum 
+                                        27 
+              MSK22_51_Eubacterium_rectale 
+                                        28 
+          TM115_Clostridium_celerecrescens 
+                                        29 
+           MSK2_5_Pediococcus_unclassified 
+                                        30 
+               TM396_Clostridium_symbosium 
+                                        31 
+            MSK18_54_Ruminococcus_lactaris 
+                                        32 
+                FC22_139_Weissella_cibaria 
+                                        33 
+    EP-10S-DFI-2-07_Escherichia_fergusonii 
+                                        34 
+                MSK15_90_Eggerthella_lenta 
+                                        35 
+                 TM460_Anaerostipes_hadrus 
+                                        36 
+                 TM458_Anaerostipes_hadrus 
+                                        37 
+      TM554_Erysipelatoclostridium_ramosum 
+                                        38 
+                 MSK21_74_Prevotella_copri 
+                                        39 
+   EP-SM-12S-S02_Faecalicatena_fissicatena 
+                                        40 
+       MSK2_63_Clostridium_clostridioforme 
+                                        41 
+       MSK5_9_Bacteroides_thetaiotaomicron 
+                                        42 
+                    TM119_Blautia_producta 
+                                        43 
+EP-SM-12S-S90_Bacteroides_thetaiotaomicron 
+                                        44 
+             MSK18_9_Bacteroides_stercoris 
+                                        45 
+        MSK21_92_Catenibacterium_mitsuokai 
+                                        46 
+210120-DFI.1.37_Parabacteroides_distasonis 
+                                        47 
+                 TM485_Anaerostipes_hadrus 
+                                        48 
+                  MSK5_8_Veillonella_ratti 
+                                        49 
+                       TM135_Blautia_obeum 
+                                        50 
+            FC22_097_Bifidobacterium_breve 
+                                        51 
+                    TM549_Blautia_wexlerae 
+                                        52 
+                  TM550_Tyzzerella_nexilis 
+                                        53 
+               TM364_Holdemanella_biformis 
+                                        54 
+     210125-DFI.1.193_Bacteroides_vulgatus 
+                                        55 
+                       TM157_Blautia_obeum 
+                                        56 
+     TM548_Fusicatenibacter_saccharivorans 
+                                        57 
+                 TM79_Bacteroides_fragilis 
+                                        58 
+                 MSK19_90_Blautia_wexlerae 
+                                        59 
+                 TM367_Eubacterium_rectale 
+                                        60 
+     EP-10S-DFI-2-34_Bacillus_unclassified 
+                                        61 
+                   TM508_Coprococcus_comes 
+                                        62 
+                     MSK22_60_Blautia_luti 
+                                        63 
+        MSK16_41_Bacteroides_xylanisolvens 
+                                        64 
+     MSK16_60_Bacteroides_thetaiotaomicron 
+                                        65 
+             MSK20_41_Bacteroides_vulgatus 
+                                        66 
+          210125-DFI.3.10_Alistipes_shahii 
+                                        67 
+                     MSK19_17_unclassified 
+                                        68 
+              MSK17_5_Bacteroides_vulgatus 
+                                        69 
+        TM551_Bacteroides_thetaiotaomicron 
+                                        70 
+   210329-SL.2.12_Enterocloster_lavalensis 
+                                        71 
+                TM350_Bacteroides_fragilis 
+                                        72 
+                 TM347_Anaerostipes_hadrus 
+                                        73 
+              MSK22_35_Anaerostipes_hadrus 
+                                        74 
+               MSK5_19_Ruminococcus_gnavus 
+                                        75 
+                    TM120_Blautia_producta 
+                                        76 
+     TM441_Fusicatenibacter_saccharivorans 
+                                        77 
+        TM393_Bifidobacterium_adolescentis 
+                                        78 
+            MSK16_66_Bacteroides_eggerthii 
+                                        79 
+                  MSK18_20_Shigella_sonnei 
+                                        80 
+                 TM474_Ruminococcus_faecis 
+                                        81 
+                MSK17_11_Dorea_longicatena 
+                                        82 
+                TM409_Bacteroides_vulgatus 
+                                        83 
+             MSK16_47_Bacteroides_vulgatus 
+                                        84 
+      TM497_Erysipelatoclostridium_ramosum 
+                                        85 
+   MSK22_1_Fusicatenibacter_saccharivorans 
+                                        86 
+                     TM91_Blautia_wexlerae 
+                                        87 
+                   TM47_Lactococcus_lactis 
+                                        88 
+                 TM377_Anaerostipes_hadrus 
+                                        89 
+                 MSK22_61_Blautia_wexlerae 
+                                        90 
+                 TM487_Anaerostipes_hadrus 
+                                        91 
+                 TM455_Anaerostipes_hadrus 
+                                        92 
+             MSK22_46_Bacteroides_vulgatus 
+                                        93 
+                 MSK21_95_Prevotella_copri 
+                                        94 
+     MSK16_65_Bacteroides_thetaiotaomicron 
+                                        95 
+            MSK17_15_Bacteroides_uniformis 
+                                        96 
+             MSK19_20_Bacteroides_vulgatus 
+                                        97 
+                 TM83_Bacteroides_vulgatus 
+                                        98 
+       MSK17_41_Intestinibacter_bartlettii 
+                                        99 
+       MSK2_59_Clostridium_clostridioforme 
+                                       100 </code></pre>
+<pre class="r"><code>center_strains # confirmed</code></pre>
+<pre><code>  [1] &quot;MSK1_25_Sellimonas_intestinalis&quot;           
+  [2] &quot;TM121_Blautia_luti&quot;                        
+  [3] &quot;TM139_Blautia_luti&quot;                        
+  [4] &quot;MSK21_60_Prevotella_copri&quot;                 
+  [5] &quot;210309-DFI.4.154A_Parabacteroides_merdae&quot;  
+  [6] &quot;MSK21_56_Prevotella_copri&quot;                 
+  [7] &quot;TM406_Escherichia_fergusonii&quot;              
+  [8] &quot;MSK19_28_unclassified&quot;                     
+  [9] &quot;MSK18_85_Bacteroides_caccae&quot;               
+ [10] &quot;TM448_Dorea_longicatena&quot;                   
+ [11] &quot;MSK18_37_Bacteroides_unclassified&quot;         
+ [12] &quot;210120-DFI.1.157_Odoribacter_splanchnicus&quot; 
+ [13] &quot;MSK17_42_Eubacterium_rectale&quot;              
+ [14] &quot;210123-DFI.3.77_Parabacteroides_distasonis&quot;
+ [15] &quot;MSK16_49_Bacteroides_eggerthii&quot;            
+ [16] &quot;TM175_Blautia_obeum&quot;                       
+ [17] &quot;TM100_Blautia_faecis&quot;                      
+ [18] &quot;MSK18_17_Bacteroides_cellulosilyticus&quot;     
+ [19] &quot;FC22_108_Bifidobacterium_breve&quot;            
+ [20] &quot;MSK22_48_Bacteroides_vulgatus&quot;             
+ [21] &quot;MSK16_67_Bacteroides_eggerthii&quot;            
+ [22] &quot;MSK23_76_Erysipelatoclostridium_ramosum&quot;   
+ [23] &quot;TM184_Fusicatenibacter_saccharivorans&quot;     
+ [24] &quot;TM134_Blautia_faecis&quot;                      
+ [25] &quot;TM104_Blautia_wexlerae&quot;                    
+ [26] &quot;MSK18_55_Blautia_wexlerae&quot;                 
+ [27] &quot;TM236_Bifidobacterium_longum&quot;              
+ [28] &quot;MSK22_51_Eubacterium_rectale&quot;              
+ [29] &quot;TM115_Clostridium_celerecrescens&quot;          
+ [30] &quot;MSK2_5_Pediococcus_unclassified&quot;           
+ [31] &quot;TM396_Clostridium_symbosium&quot;               
+ [32] &quot;MSK18_54_Ruminococcus_lactaris&quot;            
+ [33] &quot;FC22_139_Weissella_cibaria&quot;                
+ [34] &quot;EP-10S-DFI-2-07_Escherichia_fergusonii&quot;    
+ [35] &quot;MSK15_90_Eggerthella_lenta&quot;                
+ [36] &quot;TM460_Anaerostipes_hadrus&quot;                 
+ [37] &quot;TM458_Anaerostipes_hadrus&quot;                 
+ [38] &quot;TM554_Erysipelatoclostridium_ramosum&quot;      
+ [39] &quot;MSK21_74_Prevotella_copri&quot;                 
+ [40] &quot;EP-SM-12S-S02_Faecalicatena_fissicatena&quot;   
+ [41] &quot;MSK2_63_Clostridium_clostridioforme&quot;       
+ [42] &quot;MSK5_9_Bacteroides_thetaiotaomicron&quot;       
+ [43] &quot;TM119_Blautia_producta&quot;                    
+ [44] &quot;EP-SM-12S-S90_Bacteroides_thetaiotaomicron&quot;
+ [45] &quot;MSK18_9_Bacteroides_stercoris&quot;             
+ [46] &quot;MSK21_92_Catenibacterium_mitsuokai&quot;        
+ [47] &quot;210120-DFI.1.37_Parabacteroides_distasonis&quot;
+ [48] &quot;TM485_Anaerostipes_hadrus&quot;                 
+ [49] &quot;MSK5_8_Veillonella_ratti&quot;                  
+ [50] &quot;TM135_Blautia_obeum&quot;                       
+ [51] &quot;FC22_097_Bifidobacterium_breve&quot;            
+ [52] &quot;TM549_Blautia_wexlerae&quot;                    
+ [53] &quot;TM550_Tyzzerella_nexilis&quot;                  
+ [54] &quot;TM364_Holdemanella_biformis&quot;               
+ [55] &quot;210125-DFI.1.193_Bacteroides_vulgatus&quot;     
+ [56] &quot;TM157_Blautia_obeum&quot;                       
+ [57] &quot;TM548_Fusicatenibacter_saccharivorans&quot;     
+ [58] &quot;TM79_Bacteroides_fragilis&quot;                 
+ [59] &quot;MSK19_90_Blautia_wexlerae&quot;                 
+ [60] &quot;TM367_Eubacterium_rectale&quot;                 
+ [61] &quot;EP-10S-DFI-2-34_Bacillus_unclassified&quot;     
+ [62] &quot;TM508_Coprococcus_comes&quot;                   
+ [63] &quot;MSK22_60_Blautia_luti&quot;                     
+ [64] &quot;MSK16_41_Bacteroides_xylanisolvens&quot;        
+ [65] &quot;MSK16_60_Bacteroides_thetaiotaomicron&quot;     
+ [66] &quot;MSK20_41_Bacteroides_vulgatus&quot;             
+ [67] &quot;210125-DFI.3.10_Alistipes_shahii&quot;          
+ [68] &quot;MSK19_17_unclassified&quot;                     
+ [69] &quot;MSK17_5_Bacteroides_vulgatus&quot;              
+ [70] &quot;TM551_Bacteroides_thetaiotaomicron&quot;        
+ [71] &quot;210329-SL.2.12_Enterocloster_lavalensis&quot;   
+ [72] &quot;TM350_Bacteroides_fragilis&quot;                
+ [73] &quot;TM347_Anaerostipes_hadrus&quot;                 
+ [74] &quot;MSK22_35_Anaerostipes_hadrus&quot;              
+ [75] &quot;MSK5_19_Ruminococcus_gnavus&quot;               
+ [76] &quot;TM120_Blautia_producta&quot;                    
+ [77] &quot;TM441_Fusicatenibacter_saccharivorans&quot;     
+ [78] &quot;TM393_Bifidobacterium_adolescentis&quot;        
+ [79] &quot;MSK16_66_Bacteroides_eggerthii&quot;            
+ [80] &quot;MSK18_20_Shigella_sonnei&quot;                  
+ [81] &quot;TM474_Ruminococcus_faecis&quot;                 
+ [82] &quot;MSK17_11_Dorea_longicatena&quot;                
+ [83] &quot;TM409_Bacteroides_vulgatus&quot;                
+ [84] &quot;MSK16_47_Bacteroides_vulgatus&quot;             
+ [85] &quot;TM497_Erysipelatoclostridium_ramosum&quot;      
+ [86] &quot;MSK22_1_Fusicatenibacter_saccharivorans&quot;   
+ [87] &quot;TM91_Blautia_wexlerae&quot;                     
+ [88] &quot;TM47_Lactococcus_lactis&quot;                   
+ [89] &quot;TM377_Anaerostipes_hadrus&quot;                 
+ [90] &quot;MSK22_61_Blautia_wexlerae&quot;                 
+ [91] &quot;TM487_Anaerostipes_hadrus&quot;                 
+ [92] &quot;TM455_Anaerostipes_hadrus&quot;                 
+ [93] &quot;MSK22_46_Bacteroides_vulgatus&quot;             
+ [94] &quot;MSK21_95_Prevotella_copri&quot;                 
+ [95] &quot;MSK16_65_Bacteroides_thetaiotaomicron&quot;     
+ [96] &quot;MSK17_15_Bacteroides_uniformis&quot;            
+ [97] &quot;MSK19_20_Bacteroides_vulgatus&quot;             
+ [98] &quot;TM83_Bacteroides_vulgatus&quot;                 
+ [99] &quot;MSK17_41_Intestinibacter_bartlettii&quot;       
+[100] &quot;MSK2_59_Clostridium_clostridioforme&quot;       </code></pre>
+<pre class="r"><code>length(center_strains)</code></pre>
+<pre><code>[1] 100</code></pre>
+<pre class="r"><code># Plot UMAP with cluster center strains
+plot_UMAP(phylo_Biobank %&gt;% filter(phy_id %in% center_strains))</code></pre>
+<p><img src="figure/Phylogenetic_strain_selection.Rmd/unnamed-chunk-4-3.png" width="1056" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># number of species
+df_center_umap &lt;- phylo_Biobank %&gt;% filter(phy_id %in% center_strains)
+df_center_umap %&gt;% select(species) %&gt;% unique() %&gt;% dim() # 51 species</code></pre>
+<pre><code>[1] 51  1</code></pre>
+<pre class="r"><code>df_umap_distinct &lt;- df_center_umap %&gt;% count(species)
+hist(df_umap_distinct$n, main=&quot;Histogram of number of same species&quot;, xlab=&quot;Number of same species&quot;)</code></pre>
+<p><img src="figure/Phylogenetic_strain_selection.Rmd/unnamed-chunk-4-4.png" width="1056" style="display: block; margin: auto;" /></p>
+<p>Try it again with 20 clusters</p>
+<pre class="r"><code># 20 clusters
+set.seed(6)
+wcss = vector()
+n_clu = 20
+for (i in 1:n_clu) wcss[i] = sum(kmeans(k_dataset, i)$withinss)
+plot(1:n_clu,
+     wcss,
+     type = &#39;b&#39;,
+     main = paste(&#39;The Elbow Method&#39;),
+     xlab = &#39;Number of clusters&#39;,
+     ylab = &#39;WCSS&#39;)</code></pre>
+<p><img src="figure/Phylogenetic_strain_selection.Rmd/unnamed-chunk-5-1.png" width="1056" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># Fitting K-Means to the dataset
+set.seed(29)
+kmeans = kmeans(x = k_dataset, centers = n_clu)
+y_kmeans = kmeans$cluster
+
+# Visualising the clusters
+library(cluster)
+# All observation are represented by points in the plot, using principal components or multidimensional scaling.
+clusplot(k_dataset,
+         y_kmeans,
+         lines = 0,
+         shade = TRUE,
+         color = TRUE,
+         labels = 0,
+         plotchar = FALSE,
+         span = TRUE,
+         # main = paste(&#39;Clusters of strains with UMAP&#39;),
+         main = NA,
+         xlab = &#39;PC1&#39;,
+         ylab = &#39;PC2&#39;) </code></pre>
+<p><img src="figure/Phylogenetic_strain_selection.Rmd/unnamed-chunk-5-2.png" width="1056" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># get the centroid and the closest id&#39;s for 100 clusters
+kmeans$centers</code></pre>
+<pre><code>       umapA1     umapA2
+1  -4.5741750   8.423395
+2  -0.9534972   8.596058
+3  -2.6163340   6.482426
+4   1.8235875 -13.619438
+5   0.2452385 -11.949624
+6   0.5703019 -13.067964
+7  -5.4683288  -5.158901
+8  -5.2661412  -4.969316
+9  -1.0062511 -11.607182
+10 -2.7443975   7.557665
+11 -1.8242922 -11.121453
+12 -0.1898748 -12.346391
+13  1.9464752   9.181541
+14  0.1848981 -11.016513
+15 -0.3812795 -13.722815
+16 -3.8704702   5.702786
+17 -2.7258208   5.337540
+18 -0.6766907 -10.640342
+19  6.6397061   2.866920
+20  1.5813373 -10.720570</code></pre>
+<pre class="r"><code>center_strains &lt;- vector()
+min_ss &lt;- rep(Inf, n_clu)  # minimum sum of square of distance from centroid
+
+for (i in 1:n_clu){
+  print(i)
+  centroid_xy &lt;- (kmeans$centers)[i,]
+  for (j in 1:dim(k_dataset)[1]){
+    point_xy &lt;- k_dataset[j,]
+    ss &lt;- sum((centroid_xy - point_xy)^2)
+    if (ss &lt; min_ss[i]){
+      min_ss[i] &lt;- ss
+      center_strains[i] &lt;- rownames(k_dataset[j,])
+      # print(center_strains[i])
+    }
+  }
+}</code></pre>
+<pre><code>[1] 1
+[1] 2
+[1] 3
+[1] 4
+[1] 5
+[1] 6
+[1] 7
+[1] 8
+[1] 9
+[1] 10
+[1] 11
+[1] 12
+[1] 13
+[1] 14
+[1] 15
+[1] 16
+[1] 17
+[1] 18
+[1] 19
+[1] 20</code></pre>
+<pre class="r"><code>kmeans$cluster[center_strains] # center strains belong to each cluster</code></pre>
+<pre><code>                 MSK22_53_Ruminococcus_gnavus 
+                                            1 
+                    TM456_Anaerostipes_hadrus 
+                                            2 
+              TM419_Faecalicatena_fissicatena 
+                                            3 
+                    MSK21_37_Prevotella_copri 
+                                            4 
+               MSK20_79_Bacteroides_uniformis 
+                                            5 
+           EP-SM-12S-S89_Alistipes_finegoldii 
+                                            6 
+                      MSK5_13_Shigella_sonnei 
+                                            7 
+       EP-10S-DFI-2-39_Escherichia_fergusonii 
+                                            8 
+210123-DFI.4.133_Bacteroides_thetaiotaomicron 
+                                            9 
+               MSK17_61_Dorea_formicigenerans 
+                                           10 
+                     TM544_Bacteroides_ovatus 
+                                           11 
+               MSK18_74_Bacteroides_uniformis 
+                                           12 
+         TM501_Erysipelatoclostridium_ramosum 
+                                           13 
+          MSK22_22_Parabacteroides_distasonis 
+                                           14 
+               MSK16_67_Bacteroides_eggerthii 
+                                           15 
+     MSK22_67_Fusicatenibacter_saccharivorans 
+                                           16 
+                    MSK15_46_Blautia_wexlerae 
+                                           17 
+        MSK18_17_Bacteroides_cellulosilyticus 
+                                           18 
+                TM76_Collinsella_unclassified 
+                                           19 
+                MSK20_41_Bacteroides_vulgatus 
+                                           20 </code></pre>
+<pre class="r"><code>center_strains # confirmed</code></pre>
+<pre><code> [1] &quot;MSK22_53_Ruminococcus_gnavus&quot;                 
+ [2] &quot;TM456_Anaerostipes_hadrus&quot;                    
+ [3] &quot;TM419_Faecalicatena_fissicatena&quot;              
+ [4] &quot;MSK21_37_Prevotella_copri&quot;                    
+ [5] &quot;MSK20_79_Bacteroides_uniformis&quot;               
+ [6] &quot;EP-SM-12S-S89_Alistipes_finegoldii&quot;           
+ [7] &quot;MSK5_13_Shigella_sonnei&quot;                      
+ [8] &quot;EP-10S-DFI-2-39_Escherichia_fergusonii&quot;       
+ [9] &quot;210123-DFI.4.133_Bacteroides_thetaiotaomicron&quot;
+[10] &quot;MSK17_61_Dorea_formicigenerans&quot;               
+[11] &quot;TM544_Bacteroides_ovatus&quot;                     
+[12] &quot;MSK18_74_Bacteroides_uniformis&quot;               
+[13] &quot;TM501_Erysipelatoclostridium_ramosum&quot;         
+[14] &quot;MSK22_22_Parabacteroides_distasonis&quot;          
+[15] &quot;MSK16_67_Bacteroides_eggerthii&quot;               
+[16] &quot;MSK22_67_Fusicatenibacter_saccharivorans&quot;     
+[17] &quot;MSK15_46_Blautia_wexlerae&quot;                    
+[18] &quot;MSK18_17_Bacteroides_cellulosilyticus&quot;        
+[19] &quot;TM76_Collinsella_unclassified&quot;                
+[20] &quot;MSK20_41_Bacteroides_vulgatus&quot;                </code></pre>
+<pre class="r"><code>length(center_strains)</code></pre>
+<pre><code>[1] 20</code></pre>
+<pre class="r"><code># Plot UMAP with cluster center strains
+plot_UMAP(phylo_Biobank %&gt;% filter(phy_id %in% center_strains))</code></pre>
+<p><img src="figure/Phylogenetic_strain_selection.Rmd/unnamed-chunk-5-3.png" width="1056" style="display: block; margin: auto;" /></p>
+</div>
+<div id="phylogenetic-tree-construction-and-cut-the-tree-clustering" class="section level2">
+<h2>3. Phylogenetic tree construction and cut the tree / clustering</h2>
 <pre class="r"><code>phy_tree &lt;- ape::read.tree(&quot;data/Biobank_align_mafft.fasta.treefile_rooted.nwk&quot;)
 phy_tree</code></pre>
 <pre><code>
@@ -721,7 +1597,7 @@ is.ultrametric(ult_tree) # true</code></pre>
 <pre class="r"><code># convert to hclust object
 hcl &lt;- as.hclust(ult_tree)
 plot(hcl,labels = FALSE, hang= -1)</code></pre>
-<p><img src="figure/Phylogenetic_strain_selection.Rmd/unnamed-chunk-3-1.png" width="1056" style="display: block; margin: auto;" /></p>
+<p><img src="figure/Phylogenetic_strain_selection.Rmd/unnamed-chunk-6-1.png" width="1056" style="display: block; margin: auto;" /></p>
 <p>The cutree() function provides the functionality to output either desired number of clusters or clusters obtained from cutting the dendrogram at a certain height.</p>
 <pre class="r"><code># cut tree
 cut_tree &lt;- cutree(hcl, k=100)
@@ -738,7 +1614,7 @@ table(cut_tree) </code></pre>
  81  82  83  84  85  86  87  88  89  90  91  92  93  94  95  96  97  98  99 100 
   1   7   8  31  20   5  88   1   5  18   2   3  11   4   9   1   1   5   1   1 </code></pre>
 <pre class="r"><code>hist(as.vector(table(cut_tree)), breaks=100)</code></pre>
-<p><img src="figure/Phylogenetic_strain_selection.Rmd/unnamed-chunk-4-1.png" width="1056" style="display: block; margin: auto;" /></p>
+<p><img src="figure/Phylogenetic_strain_selection.Rmd/unnamed-chunk-7-1.png" width="1056" style="display: block; margin: auto;" /></p>
 <pre class="r"><code># table
 table(cut_tree)</code></pre>
 <pre><code>cut_tree
@@ -835,32 +1711,263 @@ dim(mat_dist)</code></pre>
 <p>K-means clustering</p>
 <pre class="r"><code># distance matrix has 529 x 529 dimension
 library(FCPS)
+
 kmeans_100 &lt;- kmeansClustering(mat_dist, ClusterNo=100, RandomNo=1, PlotIt= T, Verbose = T)</code></pre>
 <pre><code>[1] &quot;Starting iteration 1&quot;
 [1] &quot;Starting iteration 2&quot;
 [1] &quot;Starting iteration 3&quot;
 [1] &quot;Starting iteration 4&quot;
-[1] &quot;Starting iteration 5&quot;</code></pre>
+[1] &quot;Starting iteration 5&quot;
+[1] &quot;Starting iteration 6&quot;</code></pre>
 <pre class="r"><code>kmeans_cls &lt;- kmeans_100$Cls
 table(kmeans_cls)</code></pre>
 <pre><code>kmeans_cls
   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18  19  20 
- 13   1  13   4   3   2   5   8   1  19  17   1   6   1   5   3   7   1   8   3 
+ 13  16   4   2  16   2   7   1   5   2   6   1   1  16  14  21  15   1   8   2 
  21  22  23  24  25  26  27  28  29  30  31  32  33  34  35  36  37  38  39  40 
-  5   5   1   1   1   7   1   8   1   2   6  14   1   6  36   1   8  14   5   1 
+  2   6   5   4   3   4   2  18   1  15   3  18   7   1   6   8   1   2   3   2 
  41  42  43  44  45  46  47  48  49  50  51  52  53  54  55  56  57  58  59  60 
-  3   9   5  16  11   1   3   1  19   1   1   8   4   1   3   4   6  10   8  11 
+  9   1   9   4   2   2   2   3  19   1   2   1   5   1   1   8   3   3   1   3 
  61  62  63  64  65  66  67  68  69  70  71  72  73  74  75  76  77  78  79  80 
-  2  24   1   4   4   5   7   1   5   1   1   2   1   2   1   1   4   2  11   2 
+ 27   1   1  10   4   2   5   1   6   1   3   2  10   6   2   4   1   6   1   1 
  81  82  83  84  85  86  87  88  89  90  91  92  93  94  95  96  97  98  99 100 
-  7   1   5   3   1   1  11   1   5   1   1   3   2   4   1   6  14   1   8   2 </code></pre>
+ 13   1   1   2   2   3   1  14   2  16   1   2   2   1   2   1   1   1  24   1 </code></pre>
 <pre class="r"><code># Histogram of # of strains belonging to each cluster
 hist(as.vector(table(kmeans_cls)), breaks=100)</code></pre>
-<p><img src="figure/Phylogenetic_strain_selection.Rmd/unnamed-chunk-6-1.png" width="1056" style="display: block; margin: auto;" /></p>
+<p><img src="figure/Phylogenetic_strain_selection.Rmd/unnamed-chunk-9-1.png" width="1056" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># Let&#39;s get the list of center ids
+# kmeans_100
+
+kmeans_100$centerids</code></pre>
+<pre><code>  [1] 199 295 442 449 229 516 378 225 281 119 147 109 448 139 403  82 485  75
+ [19] 211 426 446 105 454 324 435 438 495 351 107 501 528  37 521 320 493 175
+ [37] 428 332 491 431 410 336 166 184 186 429 433 450 312 215 387 386 262 323
+ [55]  30 272 373  35 161 330  49 165 160 363  56 321 131 170 171 202 244 157
+ [73] 339 266 327 251 158 393 155 159 484 525 197 459 334 423 527 121 388  91
+ [91] 319 400 478 318 209 280 250 127  21 148</code></pre>
+<pre class="r"><code>phy_id_list &lt;- names(kmeans_cls[kmeans_100$centerids])
+
+# function to get the centroid ids
+get_centroids &lt;- function(mat_dist, num_cluster=100){
+  kmeans_100 &lt;- kmeansClustering(mat_dist, ClusterNo=num_cluster, RandomNo=1, PlotIt= T, Verbose = T)
+  kmeans_cls &lt;- kmeans_100$Cls
+  table(kmeans_cls)
+  
+  # Let&#39;s get the list of center ids
+  phy_id_list &lt;- names(kmeans_cls[kmeans_100$centerids])
+  return(phy_id_list)
+}
+
+# get 100 centroids and plot UMAP
+phy_id_list &lt;- get_centroids(mat_dist, num_cluster=100)</code></pre>
+<pre><code>[1] &quot;Starting iteration 1&quot;
+[1] &quot;Starting iteration 2&quot;
+[1] &quot;Starting iteration 3&quot;
+[1] &quot;Starting iteration 4&quot;
+[1] &quot;Starting iteration 5&quot;</code></pre>
+<pre class="r"><code>df_centroid_100 &lt;- phylo_Biobank %&gt;% filter(phy_id %in% phy_id_list)
+
+plot_UMAP(phylo_Biobank %&gt;% filter(phy_id %in% phy_id_list))</code></pre>
+<p><img src="figure/Phylogenetic_strain_selection.Rmd/unnamed-chunk-9-2.png" width="1056" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># number of species
+df_center_phy &lt;- phylo_Biobank %&gt;% filter(phy_id %in% phy_id_list)
+df_center_phy %&gt;% select(species) %&gt;% unique() %&gt;% dim() # 47 species</code></pre>
+<pre><code>[1] 60  1</code></pre>
+<pre class="r"><code>df_phy_distinct &lt;- df_center_phy %&gt;% count(species)
+hist(df_phy_distinct$n, main=&quot;Histogram of number of same species&quot;, xlab=&quot;Number of same species&quot;)</code></pre>
+<p><img src="figure/Phylogenetic_strain_selection.Rmd/unnamed-chunk-9-3.png" width="1056" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># get 80 centroids and plot UMAP
+phy_id_list &lt;- get_centroids(mat_dist, num_cluster=80)</code></pre>
+<pre><code>[1] &quot;Starting iteration 1&quot;
+[1] &quot;Starting iteration 2&quot;
+[1] &quot;Starting iteration 3&quot;
+[1] &quot;Starting iteration 4&quot;
+[1] &quot;Starting iteration 5&quot;
+[1] &quot;Starting iteration 6&quot;</code></pre>
+<pre class="r"><code>length(phy_id_list)</code></pre>
+<pre><code>[1] 80</code></pre>
+<pre class="r"><code># See what species the centerids are
+phylo_Biobank %&gt;% filter(phy_id %in% phy_id_list) %&gt;% select(phy_id, species) %&gt;% arrange(species)</code></pre>
+<pre><code>                                                phy_id
+1                 210215-DFI.2.31_Alistipes_finegoldii
+2                         MSK15_37_Anaerostipes_hadrus
+3                            TM347_Anaerostipes_hadrus
+4                            TM456_Anaerostipes_hadrus
+5                            TM464_Anaerostipes_hadrus
+6               210329-SL.2.09_Anaerovorax_odorimutans
+7                          MSK18_53_Bacteroides_caccae
+8                           MSK18_6_Bacteroides_caccae
+9                   210119-DFI.4.132_Bacteroides_dorei
+10                      MSK16_88_Bacteroides_eggerthii
+11                      MSK18_62_Bacteroides_stercoris
+12        210215-DFI.2.69_Bacteroides_thetaiotaomicron
+13                MSK18_2_Bacteroides_thetaiotaomicron
+14                   MSK18_39_Bacteroides_unclassified
+15              210120-DFI.1.135_Bacteroides_uniformis
+16              210120-DFI.1.247_Bacteroides_uniformis
+17                      MSK18_30_Bacteroides_uniformis
+18                210119-DFI.4.81_Bacteroides_vulgatus
+19                       MSK22_36_Bacteroides_vulgatus
+20                  MSK16_41_Bacteroides_xylanisolvens
+21                   MSK17_2_Bacteroides_xylanisolvens
+22               MSK17_32_Bifidobacterium_adolescentis
+23                       TM412_Bifidobacterium_bifidum
+24                      FC22_097_Bifidobacterium_breve
+25                     MSK19_51_Bifidobacterium_longum
+26                                TM100_Blautia_faecis
+27                               MSK16_34_Blautia_luti
+28                                MSK20_9_Blautia_luti
+29                               MSK22_60_Blautia_luti
+30                                  TM106_Blautia_luti
+31                                  TM547_Blautia_luti
+32                                   TM93_Blautia_luti
+33                                 TM174_Blautia_obeum
+34                   210309-MSK.14.97_Blautia_producta
+35                              TM122_Blautia_schinkii
+36                           MSK15_46_Blautia_wexlerae
+37                            MSK15_6_Blautia_wexlerae
+38                            MSK17_7_Blautia_wexlerae
+39                           MSK23_75_Blautia_wexlerae
+40                     TM416_Catenibacterium_mitsuokai
+41                 MSK2_59_Clostridium_clostridioforme
+42                          TM357_Clostridium_innocuum
+43                     MSK1_10_Collinsella_aerofaciens
+44                          MSK17_80_Coprococcus_comes
+45                       MSK18_68_Coprococcus_eutactus
+46                          MSK18_49_Dorea_longicatena
+47                             TM451_Dorea_longicatena
+48                         MSK15_110_Eggerthella_lenta
+49             MSK22_16_Erysipelatoclostridium_ramosum
+50 EP-10S-DFI-2-03_Erysipelatoclostridium_unclassified
+51                        TM402_Escherichia_fergusonii
+52                           TM426_Eubacterium_rectale
+53        210226-DFI.5.42_Faecalibacterium_prausnitzii
+54             EP-SM-12S-S02_Faecalicatena_fissicatena
+55                     MSK14_42_Flavonifractor_plautii
+56            MSK18_88_Fusicatenibacter_saccharivorans
+57            MSK20_48_Fusicatenibacter_saccharivorans
+58            MSK22_18_Fusicatenibacter_saccharivorans
+59            MSK22_67_Fusicatenibacter_saccharivorans
+60               TM361_Fusicatenibacter_saccharivorans
+61                      MSK21_54_Holdemanella_biformis
+62                         TM364_Holdemanella_biformis
+63                         TM405_Holdemanella_biformis
+64                         TM439_Holdemanella_biformis
+65                 MSK17_41_Intestinibacter_bartlettii
+66            210329-SL.1.13_Lachnospira_pectinoschiza
+67                           TM67_Megasphaera_elsdenii
+68            210120-DFI.3.53_Odoribacter_splanchnicus
+69                     MSK2_1_Pediococcus_unclassified
+70                    MSK2_77_Pediococcus_unclassified
+71                           MSK21_28_Prevotella_copri
+72                           MSK21_66_Prevotella_copri
+73                       MSK21_23_Prevotella_stercorea
+74                        MSK17_63_Ruminococcus_gnavus
+75                        MSK22_53_Ruminococcus_gnavus
+76                           TM502_Ruminococcus_gnavus
+77                            TM88_Ruminococcus_gnavus
+78                      MSK17_20_Ruminococcus_lactaris
+79                             MSK5_13_Shigella_sonnei
+80                     FC22_134_Weissella_unclassified
+                               species
+1                 Alistipes finegoldii
+2                  Anaerostipes hadrus
+3                  Anaerostipes hadrus
+4                  Anaerostipes hadrus
+5                  Anaerostipes hadrus
+6              Anaerovorax odorimutans
+7                   Bacteroides caccae
+8                   Bacteroides caccae
+9                    Bacteroides dorei
+10               Bacteroides eggerthii
+11               Bacteroides stercoris
+12        Bacteroides thetaiotaomicron
+13        Bacteroides thetaiotaomicron
+14            Bacteroides unclassified
+15               Bacteroides uniformis
+16               Bacteroides uniformis
+17               Bacteroides uniformis
+18                Bacteroides vulgatus
+19                Bacteroides vulgatus
+20           Bacteroides xylanisolvens
+21           Bacteroides xylanisolvens
+22        Bifidobacterium adolescentis
+23             Bifidobacterium bifidum
+24               Bifidobacterium breve
+25              Bifidobacterium longum
+26                      Blautia faecis
+27                        Blautia luti
+28                        Blautia luti
+29                        Blautia luti
+30                        Blautia luti
+31                        Blautia luti
+32                        Blautia luti
+33                       Blautia obeum
+34                    Blautia producta
+35                    Blautia schinkii
+36                    Blautia wexlerae
+37                    Blautia wexlerae
+38                    Blautia wexlerae
+39                    Blautia wexlerae
+40           Catenibacterium mitsuokai
+41         Clostridium clostridioforme
+42                Clostridium innocuum
+43             Collinsella aerofaciens
+44                   Coprococcus comes
+45                Coprococcus eutactus
+46                   Dorea longicatena
+47                   Dorea longicatena
+48                   Eggerthella lenta
+49      Erysipelatoclostridium ramosum
+50 Erysipelatoclostridium unclassified
+51              Escherichia fergusonii
+52                 Eubacterium rectale
+53        Faecalibacterium prausnitzii
+54           Faecalicatena fissicatena
+55              Flavonifractor plautii
+56     Fusicatenibacter saccharivorans
+57     Fusicatenibacter saccharivorans
+58     Fusicatenibacter saccharivorans
+59     Fusicatenibacter saccharivorans
+60     Fusicatenibacter saccharivorans
+61               Holdemanella biformis
+62               Holdemanella biformis
+63               Holdemanella biformis
+64               Holdemanella biformis
+65          Intestinibacter bartlettii
+66           Lachnospira pectinoschiza
+67                Megasphaera elsdenii
+68            Odoribacter splanchnicus
+69            Pediococcus unclassified
+70            Pediococcus unclassified
+71                    Prevotella copri
+72                    Prevotella copri
+73                Prevotella stercorea
+74                 Ruminococcus gnavus
+75                 Ruminococcus gnavus
+76                 Ruminococcus gnavus
+77                 Ruminococcus gnavus
+78               Ruminococcus lactaris
+79                     Shigella sonnei
+80              Weissella unclassified</code></pre>
 <pre class="r"><code># looking into the clusters
 kmeans_cls[kmeans_cls==90]</code></pre>
-<pre><code>TM435_Coprococcus_comes 
-                     90 </code></pre>
+<pre><code>210309-MSK.14.97_Blautia_producta     210309-SL2.02_Blautia_marasmi 
+                               90                                90 
+            MSK16_34_Blautia_luti                TM475_Blautia_luti 
+                               90                                90 
+            MSK22_60_Blautia_luti            TM122_Blautia_schinkii 
+                               90                                90 
+           TM123_Blautia_schinkii            TM124_Blautia_schinkii 
+                               90                                90 
+           TM136_Blautia_schinkii            TM126_Blautia_schinkii 
+                               90                                90 
+             MSK20_9_Blautia_luti             MSK20_85_Blautia_luti 
+                               90                                90 
+           TM141_Blautia_hansenii            TM118_Blautia_producta 
+                               90                                90 
+           TM119_Blautia_producta          TM164_Blautia_caecimuris 
+                               90                                90 </code></pre>
 <pre class="r"><code># searching
 df_cls &lt;- data.frame(kmeans_cls)
 df_cls &lt;- tibble::rownames_to_column(df_cls, var=&quot;id&quot;)
@@ -868,12 +1975,12 @@ colnames(df_cls)</code></pre>
 <pre><code>[1] &quot;id&quot;         &quot;kmeans_cls&quot;</code></pre>
 <pre class="r"><code>df_cls %&gt;% filter(str_detect(id, &quot;Bacteroides_fragilis&quot;))</code></pre>
 <pre><code>                             id kmeans_cls
-1 MSK16_53_Bacteroides_fragilis         35
-2 MSK16_58_Bacteroides_fragilis         35
-3    TM242_Bacteroides_fragilis         35
-4    TM389_Bacteroides_fragilis         35
-5    TM350_Bacteroides_fragilis         35
-6    TM430_Bacteroides_fragilis         35</code></pre>
+1 MSK16_53_Bacteroides_fragilis          3
+2 MSK16_58_Bacteroides_fragilis          3
+3    TM242_Bacteroides_fragilis          3
+4    TM389_Bacteroides_fragilis          3
+5    TM350_Bacteroides_fragilis         21
+6    TM430_Bacteroides_fragilis         21</code></pre>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
@@ -899,20 +2006,21 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
- [1] FCPS_1.2.7         phangorn_2.7.0     ape_5.5            openxlsx_4.2.3    
- [5] devtools_2.4.0     usethis_2.0.1      gtools_3.8.2       reshape2_1.4.4    
- [9] readxl_1.3.1       magrittr_2.0.1     forcats_0.5.1      stringr_1.4.0     
-[13] purrr_0.3.4        readr_1.4.0        tidyr_1.1.3        tibble_3.0.4      
-[17] tidyverse_1.3.1    vegan_2.5-7        lattice_0.20-41    permute_0.9-5     
-[21] RColorBrewer_1.1-2 ggplot2_3.3.3      dplyr_1.0.5        workflowr_1.6.2   
+ [1] FCPS_1.2.7         phangorn_2.7.0     cluster_2.1.0      ape_5.5           
+ [5] openxlsx_4.2.3     devtools_2.4.0     usethis_2.0.1      gtools_3.8.2      
+ [9] reshape2_1.4.4     readxl_1.3.1       magrittr_2.0.1     forcats_0.5.1     
+[13] stringr_1.4.0      purrr_0.3.4        readr_1.4.0        tidyr_1.1.3       
+[17] tibble_3.0.4       tidyverse_1.3.1    vegan_2.5-7        lattice_0.20-41   
+[21] permute_0.9-5      RColorBrewer_1.1-2 ggplot2_3.3.3      dplyr_1.0.5       
+[25] workflowr_1.6.2   
 
 loaded via a namespace (and not attached):
  [1] colorspace_2.0-0         ellipsis_0.3.1           mclust_5.4.7            
  [4] rprojroot_2.0.2          fs_1.5.0                 rstudioapi_0.13         
- [7] remotes_2.3.0            fansi_0.4.2              lubridate_1.7.10        
-[10] xml2_1.3.2               codetools_0.2-16         splines_4.0.3           
-[13] cachem_1.0.4             knitr_1.33               pkgload_1.2.1           
-[16] jsonlite_1.7.2           broom_0.7.6              cluster_2.1.0           
+ [7] farver_2.1.0             remotes_2.3.0            fansi_0.4.2             
+[10] lubridate_1.7.10         xml2_1.3.2               codetools_0.2-16        
+[13] splines_4.0.3            cachem_1.0.4             knitr_1.33              
+[16] pkgload_1.2.1            jsonlite_1.7.2           broom_0.7.6             
 [19] dbplyr_2.1.1             shiny_1.6.0              compiler_4.0.3          
 [22] httr_1.4.2               backports_1.2.1          assertthat_0.2.1        
 [25] Matrix_1.2-18            fastmap_1.1.0            cli_2.5.0               
@@ -929,16 +2037,17 @@ loaded via a namespace (and not attached):
 [58] stringi_1.5.3            highr_0.9                desc_1.3.0              
 [61] manipulateWidget_0.10.1  pkgbuild_1.2.0           zip_2.1.1               
 [64] rlang_0.4.10             pkgconfig_2.0.3          rgl_0.106.8             
-[67] evaluate_0.14            htmlwidgets_1.5.3        tidyselect_1.1.1        
-[70] processx_3.5.1           plyr_1.8.6               R6_2.5.0                
-[73] generics_0.1.0           DBI_1.1.1                pillar_1.6.0            
-[76] haven_2.4.1              whisker_0.4              withr_2.4.2             
-[79] mgcv_1.8-33              sp_1.4-5                 modelr_0.1.8            
-[82] crayon_1.4.1             utf8_1.1.4               rmarkdown_2.7           
-[85] grid_4.0.3               callr_3.7.0              git2r_0.28.0            
-[88] webshot_0.5.2            reprex_2.0.0             digest_0.6.27           
-[91] xtable_1.8-4             httpuv_1.6.0             munsell_0.5.0           
-[94] bslib_0.2.4              sessioninfo_1.1.1        quadprog_1.5-8          </code></pre>
+[67] evaluate_0.14            htmlwidgets_1.5.3        labeling_0.4.2          
+[70] tidyselect_1.1.1         processx_3.5.1           plyr_1.8.6              
+[73] R6_2.5.0                 generics_0.1.0           DBI_1.1.1               
+[76] pillar_1.6.0             haven_2.4.1              whisker_0.4             
+[79] withr_2.4.2              mgcv_1.8-33              sp_1.4-5                
+[82] modelr_0.1.8             crayon_1.4.1             utf8_1.1.4              
+[85] rmarkdown_2.7            grid_4.0.3               callr_3.7.0             
+[88] git2r_0.28.0             webshot_0.5.2            reprex_2.0.0            
+[91] digest_0.6.27            xtable_1.8-4             httpuv_1.6.0            
+[94] munsell_0.5.0            bslib_0.2.4              sessioninfo_1.1.1       
+[97] quadprog_1.5-8          </code></pre>
 </div>
 </div>
 
