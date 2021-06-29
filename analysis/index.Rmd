@@ -10,4 +10,5 @@ editor_options:
 
 Welcome to my research website.
 
-* [Phylogenetic_tree_and_clustering](Phylogenetic_strain_selection.html)
+* [Strain_selection_by_method](Phylogenetic_strain_selection.html)
+* [Pilot_20_strain_selection](20_strain_selection.html)
