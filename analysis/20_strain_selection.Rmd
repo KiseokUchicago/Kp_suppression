@@ -493,7 +493,7 @@ selected_strain_vec <- names(selected_strain_list[selected_strain_list > 0])
 # get excel
 colnames(phylo_Biobank)
 df_20strains <- phylo_Biobank %>% filter(phy_id %in% selected_strain_vec)
-write.xlsx(df_20strains,"Strain_selected_20_min_NTI.xlsx")
+# write.xlsx(df_20strains,"Strain_selected_20_min_NTI.xlsx")
 
 # plot UMAP
 plot_UMAP(phylo_Biobank %>% filter(phy_id %in% selected_strain_vec))
@@ -521,5 +521,18 @@ tiplabels(tip = which(df_tree_color$species > 0), pch = 19, cex = 2, col='green'
 
 
 ```
+
+Exporting the selected strains(using method2. ML distance!)
+```{r}
+# get excel
+colnames(phylo_Biobank)
+phylo_20 <- phylo_Biobank %>% filter(phy_id %in% phy_id_list)
+write.xlsx(phylo_20,"Strain_selected_20_kmeans_max_likelihood_distance.xlsx")
+
+
+```
+
+
+
 
 
