@@ -1,0 +1,525 @@
+---
+title: "20_strain_selection"
+author: "KiseokUchicago"
+date: "2021-06-29"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(fig.width=11, fig.height=9,
+                      error=TRUE, echo=TRUE, eval=TRUE, warning=FALSE, message=FALSE)
+```
+
+## Pilot experiment: 20 strain selection 
+**Kiseok Lee** 
+PI: **Seppe Kuehn**, **Arjun Raman**
+
+
+```{r}
+# libraries
+library(dplyr)
+library(ggplot2)
+library(RColorBrewer)
+library(vegan)
+library(tidyverse)
+library(magrittr)
+library(readxl)
+library(reshape2)
+library(gtools)
+library(devtools)
+library(openxlsx)
+library(ape)
+
+## theme for ggplot
+mytheme <- theme_bw() + 
+  theme(plot.title = element_text(size = 19,hjust = 0.5, family="serif")) + 
+  theme(axis.title.x = element_text(size = 17,hjust = 0.5, family="serif")) + 
+  theme(axis.title.y = element_text(size = 17,hjust = 0.5, family="serif")) + 
+  theme(axis.text.x = element_text(hjust = 0.5, vjust=0.3,size=13, family="serif"))+
+  theme(axis.text.y = element_text(size=10, family="serif"))+
+  theme(panel.grid.major = element_blank()) +
+  theme(panel.grid.minor = element_blank(),panel.background=element_blank(),panel.border=element_blank(),plot.background=element_blank()) +
+  theme(axis.ticks = element_line(size = 1.1))
+  
+mytheme_2d <- theme_bw() + 
+  theme(plot.title = element_text(size = 19,hjust = 0.5, family="serif")) + 
+  theme(axis.title.x = element_text(size = 17,hjust = 0.5, family="serif")) + 
+  theme(axis.title.y = element_text(size = 17,hjust = 0.5, family="serif")) + 
+  theme(axis.text.x = element_text(hjust = 0.5, vjust=0.3,size=13, family="serif"))+
+  theme(axis.text.y = element_text(size=13, family="serif"))+
+  theme(panel.grid.major = element_blank()) +
+  theme(panel.grid.minor = element_blank(),panel.background=element_blank(),plot.background=element_blank()) +
+  theme(axis.ticks = element_line(size = 1.1))
+
+
+# color collection
+my_color_collection <- c(
+  "#CBD588", "#5F7FC7", "orange", "#AD6F3B", "#673770", 
+  "#D14285", "#652926", "#C84248", "#8569D5", "#5E738F",
+  "#D1A33D", "#8A7C64", "#599861","#616163", "#FFCDB2",
+  "#6D9F71", "#242F40",
+   "#CCA43B", "#F92A82", "#ED7B84", "#7EB77F", 
+  "#DEC4A1", "#E5D1D0", '#0E8482', '#C9DAEA', '#337357', 
+  '#95C623', '#E55812', '#04471C', '#F2D7EE', '#D3BCC0', 
+  '#A5668B', '#69306D', '#0E103D', '#1A535C', '#4ECDC4', 
+  '#F7FFF7', '#FF6B6B', '#FFE66D', '#6699CC', '#FFF275', 
+  '#FF8C42', '#FF3C38', '#A23E48', '#000000', '#CF5C36', 
+  '#EEE5E9', '#7C7C7C', '#EFC88B', '#2E5266', '#6E8898', 
+  '#9FB1BC', '#D3D0CB', '#E2C044', '#5BC0EB', '#FDE74C', 
+  '#9BC53D', '#E55934', '#FA7921', "#CD9BCD", "#508578", "#DA5724")
+```
+
+
+## 0. Input data
+```{r}
+df_Biobank <- read.csv('data/biobank.umap.16sSeqs.csv')
+
+# how many species
+df_species <- df_Biobank %>% group_by(species) %>% summarise(number=n_distinct(species))
+
+# get id and sequence
+# id is seq_id + species
+phylo_Biobank <- df_Biobank %>% unite(phy_id,c("seq_id",'species'),sep="_", remove=F)
+phylo_Biobank$species <- gsub("\\[","",phylo_Biobank$species)
+phylo_Biobank$species <- gsub("]","",phylo_Biobank$species)
+# remove space in the id for downstream
+phylo_Biobank$phy_id <- gsub(" ","_",phylo_Biobank$phy_id) 
+# remove "[" and "]"
+phylo_Biobank$phy_id <- gsub("\\[","",phylo_Biobank$phy_id)
+phylo_Biobank$phy_id <- gsub("]","",phylo_Biobank$phy_id)
+col2_Biobank <- phylo_Biobank %>% dplyr::select(phy_id,nuc_sequence)
+```
+
+## 1. UMAP method
+
+```{r}
+# UMAP plotting
+ggplot(df_Biobank, aes(x=umapA1, y=umapA2)) +
+  xlab('\n umap A1')+
+  ylab("umap A2 \n") +
+  geom_point(aes(fill = genus), shape = 21 ,size=4, alpha=0.9) +
+  scale_fill_manual(values = my_color_collection)+
+  ggtitle(paste0("UMAP coordination"," \n")) +
+  # scale_x_continuous(limits = c(0, max(df_cen_wb$Degree))) +
+  # scale_y_continuous(limits = c(0, max(df_cen_wb$Betweenness))) +
+  theme(legend.text=element_text(size=13)) + 
+  # theme(legend.position="top") +
+  # theme(legend.title=element_blank()) +
+  guides(colour = guide_legend(override.aes = list(size=8), reverse = TRUE))+
+  guides(size=FALSE) +
+  mytheme_2d
+
+plot_UMAP <- function(df_Biobank){
+  ggplot(df_Biobank, aes(x=umapA1, y=umapA2)) +
+    xlab('\n umap A1')+
+    ylab("umap A2 \n") +
+    geom_point(aes(fill = genus), shape = 21 ,size=4, alpha=0.9) +
+    scale_fill_manual(values = my_color_collection)+
+    ggtitle(paste0("UMAP coordination"," \n")) +
+    # scale_x_continuous(limits = c(0, max(df_cen_wb$Degree))) +
+    # scale_y_continuous(limits = c(0, max(df_cen_wb$Betweenness))) +
+    theme(legend.text=element_text(size=13)) + 
+    # theme(legend.position="top") +
+    # theme(legend.title=element_blank()) +
+    guides(colour = guide_legend(override.aes = list(size=8), reverse = TRUE))+
+    guides(size=FALSE) +
+    mytheme_2d
+}
+
+
+```
+
+## 1.1. K-means clustering in UMAP distribution
+
+(1) First, using the elbow method to find the optimal number of clusters \
+Within-Cluster-Sum-of-Squares (WCSS) is the sum of squares of the distances of each data point in all clusters to their respective centroids. \
+
+(2) The number of strains: 20 clusters
+
+```{r}
+# 20 clusters
+n_clu = 20
+set.seed(6)
+wcss = vector()
+
+for (i in 1:849) wcss[i] = sum(kmeans(k_dataset, i)$withinss)
+plot(1:849,
+     wcss,
+     type = 'b',
+     main = paste('The Elbow Method'),
+     xlab = 'Number of clusters',
+     ylab = 'WCSS')
+
+# WCSS(y axis in log scale)
+wcss = vector()
+for (i in 1:849) wcss[i] = log(sum(kmeans(k_dataset, i)$withinss))
+plot(1:849,
+     wcss,
+     type = 'b',
+     main = paste('The Elbow Method'),
+     xlab = 'Number of clusters',
+     ylab = 'log WCSS',
+     col='maroon')
+
+# Fitting K-Means to the dataset
+set.seed(29)
+kmeans = kmeans(x = k_dataset, centers = n_clu)
+y_kmeans = kmeans$cluster
+
+# Visualising the clusters
+library(cluster)
+# All observation are represented by points in the plot, using principal components or multidimensional scaling.
+clusplot(k_dataset,
+         y_kmeans,
+         lines = 0,
+         shade = TRUE,
+         color = TRUE,
+         labels = 0,
+         plotchar = FALSE,
+         span = TRUE,
+         # main = paste('Clusters of strains with UMAP'),
+         main = NA,
+         xlab = 'PC1',
+         ylab = 'PC2') 
+
+
+# get the centroid and the closest id's for 100 clusters
+kmeans$centers
+
+center_strains <- vector()
+min_ss <- rep(Inf, n_clu)  # minimum sum of square of distance from centroid
+
+for (i in 1:n_clu){
+  print(i)
+  centroid_xy <- (kmeans$centers)[i,]
+  for (j in 1:dim(k_dataset)[1]){
+    point_xy <- k_dataset[j,]
+    ss <- sum((centroid_xy - point_xy)^2)
+    if (ss < min_ss[i]){
+      min_ss[i] <- ss
+      center_strains[i] <- rownames(k_dataset[j,])
+      # print(center_strains[i])
+    }
+  }
+}
+
+kmeans$cluster[center_strains] # center strains belong to each cluster
+center_strains # confirmed
+length(center_strains)
+
+# Plot UMAP with cluster center strains
+plot_UMAP(phylo_Biobank %>% filter(phy_id %in% center_strains))
+
+# number of species
+df_center_umap <- phylo_Biobank %>% filter(phy_id %in% center_strains)
+df_center_umap %>% dplyr::select(species) %>% unique() %>% dim() # 19 species
+df_center_umap %>% dplyr::select(genus) %>% unique() %>% dim() # 13
+df_center_umap %>% dplyr::select(family) %>% unique() %>% dim() # 8
+df_center_umap %>% dplyr::select(order) %>% unique() %>% dim() # 5
+df_center_umap %>% dplyr::select(class) %>% unique() %>% dim() # 5
+df_center_umap %>% dplyr::select(phylum) %>% unique() %>% dim() # 4
+
+df_umap_distinct <- df_center_umap %>% count(species)
+hist(df_umap_distinct$n, main="Histogram of number of same species", xlab="Number of same species")
+
+```
+
+
+## 2. Phylogenetic tree construction and cut the tree / clustering
+
+Import tree
+```{r}
+phy_tree <- ape::read.tree("data/Biobank_align_mafft.fasta.treefile_rooted.nwk")
+phy_tree
+```
+
+## 2.1. Use distance matrix to do k-means clustering
+
+```{r}
+# input tab delimited table
+ml_dist <- read.table("data/Biobank_align_mafft.fasta.mldist.tsv", sep="\t", header = F)
+# head(ml_dist)
+
+# set row and column name
+ml_dist %<>% dplyr::select(-V531)
+dim(ml_dist)
+
+colnames(ml_dist)
+tibble::column_to_rownames(ml_dist, var="V1") %>% dim()
+
+mat_dist <- tibble::column_to_rownames(ml_dist, var="V1")
+colnames(mat_dist) <- rownames(mat_dist)
+dim(mat_dist)
+
+mat_dist <- as.matrix(mat_dist)
+
+```
+
+## 2.2. K-means clustering
+20 clusters
+```{r}
+# distance matrix has 529 x 529 dimension
+library(FCPS)
+n_clu = 20
+kmeans_20 <- kmeansClustering(mat_dist, ClusterNo=n_clu, RandomNo=1, PlotIt= T, Verbose = T)
+
+kmeans_cls <- kmeans_20$Cls
+table(kmeans_cls)
+
+# Histogram of # of strains belonging to each cluster
+hist(as.vector(table(kmeans_cls)), breaks=n_clu)
+
+# Let's get the list of center ids
+# kmeans_20
+
+kmeans_20$centerids
+phy_id_list <- names(kmeans_cls[kmeans_20$centerids])
+
+# function to get the centroid ids
+get_centroids <- function(mat_dist, num_cluster=100){
+  kmeans_20 <- kmeansClustering(mat_dist, ClusterNo=num_cluster, RandomNo=1, PlotIt= T, Verbose = T)
+  kmeans_cls <- kmeans_20$Cls
+  table(kmeans_cls)
+  
+  # Let's get the list of center ids
+  phy_id_list <- names(kmeans_cls[kmeans_20$centerids])
+  return(phy_id_list)
+}
+
+# get 100 centroids and plot UMAP
+phy_id_list <- get_centroids(mat_dist, num_cluster=20)
+
+df_centroid_20 <- phylo_Biobank %>% filter(phy_id %in% phy_id_list)
+
+plot_UMAP(phylo_Biobank %>% filter(phy_id %in% phy_id_list))
+
+# number of species, genus, family,...
+df_center_phy <- phylo_Biobank %>% filter(phy_id %in% phy_id_list)
+df_center_phy %>% dplyr::select(species) %>% unique() %>% dim() # 19 species
+df_center_phy %>% dplyr::select(genus) %>% unique() %>% dim() # 14
+df_center_phy %>% dplyr::select(family) %>% unique() %>% dim() # 9
+df_center_phy %>% dplyr::select(order) %>% unique() %>% dim() # 6
+df_center_phy %>% dplyr::select(class) %>% unique() %>% dim() # 6
+df_center_phy %>% dplyr::select(phylum) %>% unique() %>% dim() # 3
+
+df_phy_distinct <- df_center_phy %>% count(species)
+
+hist(df_phy_distinct$n, main="Histogram of number of same species", xlab="Number of same species")
+
+# See what species the centerids are
+phylo_Biobank %>% filter(phy_id %in% phy_id_list) %>% dplyr::select(phy_id, species) %>% arrange(species)
+
+```
+
+## 3. Comparison of strain sets
+Now we will calculate NRI (Net Relatedness Index) and NTI (Nearest Taxon Index) for our different communities. Rembember, negative NRI and NTI values indicate a high level of phylogenetic overdispersion, and positive NRI and NTI values indicate phylogenetic clustering. \
+- Source: http://ib.berkeley.edu/courses/ib200/2016/labs/14/lab14.R \
+- Source2: http://ib.berkeley.edu/courses/ib200b/labs/lab16/ib200b_lab16_phylocomm.pdf \
+- Paper: Horner-Devine, M. C., & Bohannan, B. J. (2006). Phylogenetic clustering and overdispersion in bacterial communities. Ecology, 87(sp7), S100-S108. https://esajournals.onlinelibrary.wiley.com/doi/10.1890/0012-9658%282006%2987%5B100%3APCAOIB%5D2.0.CO%3B2 \
+
+## 3.1. Visualize phylogenetic tree and selected strains
+```{r}
+# PICANTE R package
+# install.packages("picante")
+library(picante)
+
+# strain list for 2 different methods
+# (Method 1) UMAP method
+strains_umap <- center_strains
+# (Method 2) Phylogenetic tree method
+strains_phy <- phy_id_list
+
+# Let's visualize our data. Now let's see how taxa from the 2 communities from different methods arranged on the tree. 
+phy_tree
+phy_tree$edge
+
+n_tips <- length(phy_tree$tip.label)
+
+# let's color the branches
+df_tree_color <- tibble(phy_id = phy_tree$tip.label, color=rep(1,n_tips),
+       umap = ifelse(phy_tree$tip.label %in% strains_umap,T,F),
+       phy = ifelse(phy_tree$tip.label %in% strains_phy,T,F))
+
+
+sum(df_tree_color$umap) # confirmed 100
+sum(df_tree_color$phy) # confirmed 100
+
+# color
+df_tree_color$color <- ifelse(df_tree_color$umap & df_tree_color$phy,4,# if in both umap and phy (blue)
+                              ifelse(df_tree_color$phy, 3, # if in only phy (green)
+                                     ifelse(df_tree_color$umap, 2, 1))) # if in only umap (red)
+table(df_tree_color$color) # 1: black, 2: umap, 3: phy, 4: both
+
+# (1) Plot tree with umap-method strains indicated
+plot.phylo(phy_tree, show.tip.label = F, cex=0.1,
+           # align.tip.label = 2,
+           # tip.color=df_tree_color$umap, 
+           edge.width=1,
+           # adj = c(1, 0.5),
+           no.margin = T)
+tiplabels(tip = which(df_tree_color$umap > 0), pch = 19, cex = 2, col='maroon')
+
+# (2) Plot tree with umap-method strains indicated
+plot.phylo(phy_tree, show.tip.label = F, cex=0.1,
+           # align.tip.label = 2,
+           # tip.color=df_tree_color$umap, 
+           edge.width=1,
+           # adj = c(1, 0.5),
+           no.margin = T)
+tiplabels(tip = which(df_tree_color$phy > 0), pch = 19, cex = 2, col='skyblue')
+
+# plot together with colors
+plot.phylo(phy_tree, show.tip.label = F, cex=0.1,
+           # align.tip.label = 2,
+           # tip.color=df_tree_color$umap, 
+           edge.width=1,
+           # adj = c(1, 0.5),
+           no.margin = T)
+tiplabels(tip = which(df_tree_color$color == 2), pch = 19, cex = 2, col='maroon')
+tiplabels(tip = which(df_tree_color$color == 3), pch = 19, cex = 2, col='skyblue')
+tiplabels(tip = which(df_tree_color$color == 4), pch = 19, cex = 2, col='navy')
+
+```
+
+## 3.2. Calculate and compare NRI and NTI (phylogenetic overdispersion or phylogenetic clustering)
+
+```{r}
+# making binary community matrix
+umap = phy_tree$tip.label %in% strains_umap
+phylogenetic = phy_tree$tip.label %in% strains_phy
+
+# get community matrix with different species
+select_different_species <- function(n=100){
+  phy_species <- phylo_Biobank %>% select(phy_id, species)
+  unique_species_vec <- unique(phylo_Biobank$species)  # unique species vector
+  
+  # randomly select n=100 different species
+  diff_species_rand1 <- sample(unique_species_vec, n)
+  phy_species %<>% filter(species %in% diff_species_rand1) # get strains with those sampled species
+  dim(phy_species)
+  
+  # randomly select 1 strain of each 100 species
+  diff_species <- phy_species[sample(1:dim(phy_species)[1]),] %>% group_by(species) %>% filter(row_number()==1)
+  length(unique(diff_species$species)) # 100
+
+  diff_species1 = phy_tree$tip.label %in% diff_species$phy_id
+  return(diff_species1)
+}
+
+select_different_species(n=20)
+
+set.seed(1)
+dif_species1 = select_different_species(n=20)
+dif_species2 = select_different_species(n=20)
+dif_species3 = select_different_species(n=20)
+
+# random 
+set.seed(61)
+random1 = phy_tree$tip.label %in% sample(phy_tree$tip.label, 20)
+random2 = phy_tree$tip.label %in% sample(phy_tree$tip.label, 20)
+random3 = phy_tree$tip.label %in% sample(phy_tree$tip.label, 20)
+
+# bind it into community matrix
+mat_com <- rbind(umap, phylogenetic, dif_species1, dif_species2, dif_species3, random1, random2, random3)
+colnames(mat_com) <- phy_tree$tip.label
+
+dim(mat_com)
+phydist <- cophenetic(phy_tree)
+dim(phydist)
+
+ses.mpd(mat_com, dis = phydist, null.model="taxa.labels")
+
+NRI_table <- ses.mpd(mat_com, dis = phydist, null.model="taxa.labels")
+NRI_table <- tibble::rownames_to_column(NRI_table, var="method")
+write.xlsx(NRI_table, "20_strain_NRI_table.xlsx")
+
+# The rows are the communities.  The first four columns should be pretty straight forward given the definition of the NRI from lecture.  To review:
+# ntaxa Number of taxa in community
+# mpd.obs Observed mean pairwise distance (MPD) in community
+# mpd.rand.mean Mean MPD in null communities
+# mpd.rand.sd Standard deviation of MPD in null communities
+# mpd.obs.rank Rank of observed MPD vs. null communities
+# mpd.obs.z Standardized effect size of MPD vs. null communities (equivalent to -NRI)
+
+NTI_table <- ses.mntd(mat_com, dis = phydist, null.model="taxa.labels")
+NTI_table <- tibble::rownames_to_column(NTI_table, var="method")
+write.xlsx(NTI_table, "20_strain_NTI_table.xlsx")
+```
+
+Histogram of species
+```{r}
+
+phy_species <- phylo_Biobank %>% select(phy_id, species)
+hist_spe <- phy_species %>% group_by(species) %>% summarize(frequency=n_distinct(phy_id))
+histogram(hist_spe$frequency, xlab="Number of Strains in the same species", breaks=30)
+
+```
+
+
+## 4. Method 3: Selection of strains all belonging to different species
+- Selecting strains belonging to different species is the optimal strategy.
+- Randomly pick and choose the community with lowest NTI.
+
+```{r}
+# matrix
+n <- 1000
+n_tips <- length(phy_tree$tip.label)
+
+mat_1000 <- matrix(rep(-1,n*n_tips), nrow=n,ncol=n_tips)
+dim(mat_1000)
+for (i in 1:n){
+  print(i)
+  mat_1000[i,] = select_different_species(n=20)
+}
+
+colnames(mat_1000) <- phy_tree$tip.label
+rownames(mat_1000) <- paste0("set",1:n)
+# head(mat_1000)
+
+# NTI
+NTI_species_table <- ses.mntd(mat_1000, dis = phydist, null.model = "taxa.labels")
+NTI_species_table <- tibble::rownames_to_column(NTI_species_table, var="method")
+NTI_species_table %>% filter(mntd.obs.z == max(NTI_species_table$mntd.obs.z))
+
+set_number <- NTI_species_table %>% filter(mntd.obs.z == max(NTI_species_table$mntd.obs.z))
+set_number <- set_number$method
+set_number
+
+selected_strain_list <- mat_1000[set_number,]
+selected_strain_vec <- names(selected_strain_list[selected_strain_list > 0])
+
+# get excel
+colnames(phylo_Biobank)
+df_20strains <- phylo_Biobank %>% filter(phy_id %in% selected_strain_vec)
+write.xlsx(df_20strains,"Strain_selected_20_min_NTI.xlsx")
+
+# plot UMAP
+plot_UMAP(phylo_Biobank %>% filter(phy_id %in% selected_strain_vec))
+
+# number of species, genus, family,...
+df_diff_species <- phylo_Biobank %>% filter(phy_id %in% selected_strain_vec)
+df_diff_species %>% dplyr::select(species) %>% unique() %>% dim() # 19 species
+df_diff_species %>% dplyr::select(genus) %>% unique() %>% dim() # 14
+df_diff_species %>% dplyr::select(family) %>% unique() %>% dim() # 9
+df_diff_species %>% dplyr::select(order) %>% unique() %>% dim() # 6
+df_diff_species %>% dplyr::select(class) %>% unique() %>% dim() # 6
+df_diff_species %>% dplyr::select(phylum) %>% unique() %>% dim() # 3
+
+
+# plot tree
+df_tree_color <- tibble(phy_id = phy_tree$tip.label, species = ifelse(phy_tree$tip.label %in% selected_strain_vec,T,F))
+
+plot.phylo(phy_tree, show.tip.label = F, cex=0.1,
+           # align.tip.label = 2,
+           # tip.color=df_tree_color$umap, 
+           edge.width=1,
+           # adj = c(1, 0.5),
+           no.margin = T)
+tiplabels(tip = which(df_tree_color$species > 0), pch = 19, cex = 2, col='green')
+
+
+```
+
+
