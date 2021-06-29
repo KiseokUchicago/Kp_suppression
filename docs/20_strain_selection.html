@@ -476,16 +476,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomKiseokUchicagoKpsuppressiontreea91f7ed875bc9b40ce120ceb5925ac32f7dd19fbtargetblanka91f7eda"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/KiseokUchicago/Kp_suppression/tree/a91f7ed875bc9b40ce120ceb5925ac32f7dd19fb" target="_blank">a91f7ed</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomKiseokUchicagoKpsuppressiontreea59652ebd60b5a92f9e776e15eaf86c8694d0c92targetblanka59652ea"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/KiseokUchicago/Kp_suppression/tree/a59652ebd60b5a92f9e776e15eaf86c8694d0c92" target="_blank">a59652e</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomKiseokUchicagoKpsuppressiontreea91f7ed875bc9b40ce120ceb5925ac32f7dd19fbtargetblanka91f7eda" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomKiseokUchicagoKpsuppressiontreea59652ebd60b5a92f9e776e15eaf86c8694d0c92targetblanka59652ea" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/KiseokUchicago/Kp_suppression/tree/a91f7ed875bc9b40ce120ceb5925ac32f7dd19fb" target="_blank">a91f7ed</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/KiseokUchicago/Kp_suppression/tree/a59652ebd60b5a92f9e776e15eaf86c8694d0c92" target="_blank">a59652e</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -500,6 +500,7 @@ Untracked files:
     Untracked:  20_strain_NTI_table.xlsx
     Untracked:  NRI_table.xlsx
     Untracked:  NTI_table.xlsx
+    Untracked:  Strain_selected_20_kmeans_max_likelihood_distance.xlsx
     Untracked:  Strain_selected_20_max_NTI.xlsx
     Untracked:  Strain_selected_20_min_NTI.xlsx
     Untracked:  Strain_selected_95_max_NTI.xlsx
@@ -566,6 +567,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/KiseokUchicago/Kp_suppression/blob/a59652ebd60b5a92f9e776e15eaf86c8694d0c92/analysis/20_strain_selection.Rmd" target="_blank">a59652e</a>
+</td>
+<td>
+KiseokUchicago
+</td>
+<td>
+2021-06-29
+</td>
+<td>
+20
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/KiseokUchicago/Kp_suppression/cf9be3d4ccf24d00c5ba1fec550a3d6c6e0ee967/docs/20_strain_selection.html" target="_blank">cf9be3d</a>
+</td>
+<td>
+KiseokUchicago
+</td>
+<td>
+2021-06-29
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -3959,7 +3994,7 @@ colnames(phylo_Biobank)</code></pre>
  [6] &quot;msk_id&quot;       &quot;length_bp&quot;    &quot;phylum&quot;       &quot;class&quot;        &quot;order&quot;       
 [11] &quot;family&quot;       &quot;genus&quot;        &quot;species&quot;      &quot;nuc_sequence&quot;</code></pre>
 <pre class="r"><code>df_20strains &lt;- phylo_Biobank %&gt;% filter(phy_id %in% selected_strain_vec)
-write.xlsx(df_20strains,&quot;Strain_selected_20_min_NTI.xlsx&quot;)
+# write.xlsx(df_20strains,&quot;Strain_selected_20_min_NTI.xlsx&quot;)
 
 # plot UMAP
 plot_UMAP(phylo_Biobank %&gt;% filter(phy_id %in% selected_strain_vec))</code></pre>
@@ -3989,6 +4024,14 @@ plot.phylo(phy_tree, show.tip.label = F, cex=0.1,
            no.margin = T)
 tiplabels(tip = which(df_tree_color$species &gt; 0), pch = 19, cex = 2, col=&#39;green&#39;)</code></pre>
 <p><img src="figure/20_strain_selection.Rmd/unnamed-chunk-11-2.png" width="1056" style="display: block; margin: auto;" /></p>
+<p>Exporting the selected strains(using method2. ML distance!)</p>
+<pre class="r"><code># get excel
+colnames(phylo_Biobank)</code></pre>
+<pre><code> [1] &quot;phy_id&quot;       &quot;seq_id&quot;       &quot;umapA1&quot;       &quot;umapA2&quot;       &quot;tiplabel&quot;    
+ [6] &quot;msk_id&quot;       &quot;length_bp&quot;    &quot;phylum&quot;       &quot;class&quot;        &quot;order&quot;       
+[11] &quot;family&quot;       &quot;genus&quot;        &quot;species&quot;      &quot;nuc_sequence&quot;</code></pre>
+<pre class="r"><code>phylo_20 &lt;- phylo_Biobank %&gt;% filter(phy_id %in% phy_id_list)
+write.xlsx(phylo_20,&quot;Strain_selected_20_kmeans_max_likelihood_distance.xlsx&quot;)</code></pre>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
