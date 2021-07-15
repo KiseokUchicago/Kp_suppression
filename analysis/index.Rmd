@@ -12,3 +12,4 @@ Welcome to my research website.
 
 * [Strain_selection_by_method](Phylogenetic_strain_selection.html)
 * [Pilot_20_strain_selection](20_strain_selection.html)
+* [Pilot_20_strain_selection_with_66strains](select20_from_66strains.html)
