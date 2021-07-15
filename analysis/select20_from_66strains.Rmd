@@ -1,0 +1,342 @@
+---
+title: "select20_from_66strains"
+author: "KiseokUchicago"
+date: "2021-07-14"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(fig.width=11, fig.height=9,
+                      error=TRUE, echo=TRUE, eval=TRUE, warning=FALSE, message=FALSE)
+```
+
+## Pilot experiment: 20 strain selection from 66 strain constraint
+**Kiseok Lee** 
+PI: **Seppe Kuehn**, **Arjun Raman**
+
+
+```{r}
+# libraries
+library(dplyr)
+library(ggplot2)
+library(RColorBrewer)
+library(vegan)
+library(tidyverse)
+library(magrittr)
+library(readxl)
+library(reshape2)
+library(gtools)
+library(devtools)
+library(openxlsx)
+library(ape)
+library(picante)
+library(fields)
+
+## theme for ggplot
+mytheme <- theme_bw() + 
+  theme(plot.title = element_text(size = 19,hjust = 0.5, family="serif")) + 
+  theme(axis.title.x = element_text(size = 17,hjust = 0.5, family="serif")) + 
+  theme(axis.title.y = element_text(size = 17,hjust = 0.5, family="serif")) + 
+  theme(axis.text.x = element_text(hjust = 0.5, vjust=0.3,size=13, family="serif"))+
+  theme(axis.text.y = element_text(size=10, family="serif"))+
+  theme(panel.grid.major = element_blank()) +
+  theme(panel.grid.minor = element_blank(),panel.background=element_blank(),panel.border=element_blank(),plot.background=element_blank()) +
+  theme(axis.ticks = element_line(size = 1.1))
+  
+mytheme_2d <- theme_bw() + 
+  theme(plot.title = element_text(size = 19,hjust = 0.5, family="serif")) + 
+  theme(axis.title.x = element_text(size = 17,hjust = 0.5, family="serif")) + 
+  theme(axis.title.y = element_text(size = 17,hjust = 0.5, family="serif")) + 
+  theme(axis.text.x = element_text(hjust = 0.5, vjust=0.3,size=13, family="serif"))+
+  theme(axis.text.y = element_text(size=13, family="serif"))+
+  theme(panel.grid.major = element_blank()) +
+  theme(panel.grid.minor = element_blank(),panel.background=element_blank(),plot.background=element_blank()) +
+  theme(axis.ticks = element_line(size = 1.1))
+
+
+# color collection
+my_color_collection <- c(
+  "#CBD588", "#5F7FC7", "orange", "#AD6F3B", "#673770", 
+  "#D14285", "#652926", "#C84248", "#8569D5", "#5E738F",
+  "#D1A33D", "#8A7C64", "#599861","#616163", "#FFCDB2",
+  "#6D9F71", "#242F40",
+   "#CCA43B", "#F92A82", "#ED7B84", "#7EB77F", 
+  "#DEC4A1", "#E5D1D0", '#0E8482', '#C9DAEA', '#337357', 
+  '#95C623', '#E55812', '#04471C', '#F2D7EE', '#D3BCC0', 
+  '#A5668B', '#69306D', '#0E103D', '#1A535C', '#4ECDC4', 
+  '#F7FFF7', '#FF6B6B', '#FFE66D', '#6699CC', '#FFF275', 
+  '#FF8C42', '#FF3C38', '#A23E48', '#000000', '#CF5C36', 
+  '#EEE5E9', '#7C7C7C', '#EFC88B', '#2E5266', '#6E8898', 
+  '#9FB1BC', '#D3D0CB', '#E2C044', '#5BC0EB', '#FDE74C', 
+  '#9BC53D', '#E55934', '#FA7921', "#CD9BCD", "#508578", "#DA5724")
+
+# functions
+plot_UMAP <- function(df_Biobank){
+  ggplot(df_Biobank, aes(x=umapA1, y=umapA2)) +
+    xlab('\n umap A1')+
+    ylab("umap A2 \n") +
+    geom_point(aes(fill = genus), shape = 21 ,size=4, alpha=0.9) +
+    scale_fill_manual(values = my_color_collection)+
+    ggtitle(paste0("UMAP coordination"," \n")) +
+    # scale_x_continuous(limits = c(0, max(df_cen_wb$Degree))) +
+    # scale_y_continuous(limits = c(0, max(df_cen_wb$Betweenness))) +
+    theme(legend.text=element_text(size=13)) + 
+    # theme(legend.position="top") +
+    # theme(legend.title=element_blank()) +
+    guides(colour = guide_legend(override.aes = list(size=8), reverse = TRUE))+
+    guides(size=FALSE) +
+    mytheme_2d
+}
+
+# import tree
+phy_tree <- ape::read.tree("data/Biobank_align_mafft.fasta.treefile_rooted.nwk")
+phy_tree
+```
+
+## 1. Import 66 strain list 
+This list is achieved from filtering out strains from the 95 strain list that may not grow in BHIS media and are not strictly anaerobic. 
+
+```{r}
+strain66 <- read.xlsx('data/Strain_selected_95_max_NTI_CEKannotated_updated.xlsx')
+dim(strain66)
+head(strain66)
+colnames(strain66)
+strain66 <- strain66 %>% filter(!is.na(phy_id))
+
+# Plot UMAP
+plot_UMAP(strain66)
+
+# Plot tree
+strain66_vec = strain66$phy_id
+df_tree_color <- tibble(phy_id = phy_tree$tip.label, species = ifelse(phy_tree$tip.label %in% strain66_vec,T,F))
+
+plot.phylo(phy_tree, show.tip.label = F, cex=0.1,
+           # align.tip.label = 2,
+           # tip.color=df_tree_color$umap, 
+           edge.width=1,
+           # adj = c(1, 0.5),
+           no.margin = T)
+tiplabels(tip = which(df_tree_color$species > 0), pch = 19, cex = 2, col='darkgreen')
+
+
+```
+
+
+## 2. Strategy
+1. Maximizing mean nearest UMAP euclidean distance (2D)
+- nearest UMAP distance for 1 strain = UMAP distance to nearest strain 
+- mean nearest UMAP distance for 1 strain = average of UMAP distance to nearest strain for all strain
+
+```{r}
+# Get 20 strain set with highest "mean nearest UMAP distance"
+
+# randomly select n=20 different species
+rand_num = 10000 # how many sampling 
+n = 20 # community size
+strain20_rand <- sample(strain66_vec, n)
+
+library(fields)
+strain66_coor <- strain66 %>% select(phy_id, umapA1, umapA2)
+strain66_coor <- tibble::column_to_rownames(strain66_coor, var="phy_id") 
+strain66_dist <- rdist(strain66_coor)
+dim(strain66_dist)
+strain66_dist <- as.data.frame(strain66_dist)
+rownames(strain66_dist) <- rownames(strain66_coor)
+colnames(strain66_dist) <- rownames(strain66_coor)
+head(strain66_dist)
+
+# get minimum distance (minimum positive)
+apply(strain66_dist, 1, FUN = function(x) {min(x[x > 0])})
+# get mean of nearest UMAP distance
+mean(apply(strain66_dist, 1, FUN = function(x) {min(x[x > 0])}))
+
+# execute
+sampling20_list <- list() 
+
+for (rand in 1:rand_num){
+  print(rand)
+  # random sampling
+  strain20_rand <- sample(strain66_vec, n)
+  strain20_coor <- strain66 %>% filter(phy_id %in% strain20_rand) %>% select(phy_id, umapA1, umapA2)
+  strain20_coor <- tibble::column_to_rownames(strain20_coor, var="phy_id") 
+  strain20_dist <- rdist(strain20_coor)
+  dim(strain20_dist)
+  strain20_dist <- as.data.frame(strain20_dist)
+  rownames(strain20_dist) <- rownames(strain20_coor)
+  colnames(strain20_dist) <- rownames(strain20_coor)
+  head(strain20_dist)
+  
+  # get minimum distance (minimum positive)
+  # apply(strain66_dist, 1, FUN = function(x) {min(x[x > 0])})
+  # get mean of nearest UMAP distance
+  mean1 = mean(apply(strain20_dist, 1, FUN = function(x) {min(x[x > 0])}))
+  
+  # save in list
+  sampling20_list[[rand]] <- list(
+    mean_nearest_distance = mean1,
+    distance_mat = strain20_dist
+  )
+}
+
+mean_nearest_dist_vec <- c()
+for (i in 1:rand_num){
+  mean_nearest_dist_vec[i] <- sampling20_list[[i]]$mean_nearest_distance
+}
+
+hist(mean_nearest_dist_vec)
+which.max(mean_nearest_dist_vec)
+sampling20_list[[which.max(mean_nearest_dist_vec)]]$distance_mat
+
+max <- sampling20_list[[which.max(mean_nearest_dist_vec)]]$distance_mat
+max_strain_list <- rownames(max)
+
+## plot UMAP of selected strains
+
+plot_UMAP(strain66 %>% filter(phy_id %in% max_strain_list))
+
+```
+
+This method does not work well.
+
+## 2.2. Adjust lower percentile to average
+
+```{r}
+# randomly select n=20 different species
+rand_num = 10000 # how many sampling 
+n = 20 # community size
+
+# execute function
+sampling_func <- function(rand_num = 10000, n = 20, lower_percentile = 1.0){
+  # empty list
+  sampling20_list <- list() 
+  
+  # do sampling for rand_num of times
+  for (rand in 1:rand_num){
+    # print(rand)
+    # random sampling
+    strain20_rand <- sample(strain66_vec, n)
+    strain20_coor <- strain66 %>% filter(phy_id %in% strain20_rand) %>% select(phy_id, umapA1, umapA2)
+    strain20_coor <- tibble::column_to_rownames(strain20_coor, var="phy_id") 
+    strain20_dist <- rdist(strain20_coor)
+    dim(strain20_dist)
+    strain20_dist <- as.data.frame(strain20_dist)
+    rownames(strain20_dist) <- rownames(strain20_coor)
+    colnames(strain20_dist) <- rownames(strain20_coor)
+    head(strain20_dist)
+    
+    # get minimum distance (minimum positive)
+    nearest_dist_vec <- apply(strain20_dist, 1, FUN = function(x) {min(x[x > 0])})
+    nearest_dist_vec <- nearest_dist_vec[order(nearest_dist_vec)] # order from lowest to highest
+    
+    
+    # nearest distance for lower percentile
+    nearest_dist_vec[1:round(n*lower_percentile)]
+    # get mean of nearest UMAP distance
+    mean1 = mean(nearest_dist_vec[1:round(n*lower_percentile)])
+    
+    # save in list
+    sampling20_list[[rand]] <- list(
+      mean_nearest_distance = mean1,
+      distance_mat = strain20_dist
+    )
+  }
+  return(sampling20_list)
+}
+
+```
+
+100% percentile
+
+```{r}
+strain20_100percentile <- sampling_func(rand_num = 10000, n = 20, lower_percentile = 1.0)
+
+  
+mean_nearest_dist_vec <- c()
+for (i in 1:rand_num){
+  mean_nearest_dist_vec[i] <- strain20_100percentile[[i]]$mean_nearest_distance
+}
+
+hist(mean_nearest_dist_vec)
+which.max(mean_nearest_dist_vec)
+strain20_100percentile[[which.max(mean_nearest_dist_vec)]]$distance_mat
+
+max_100 <- strain20_100percentile[[which.max(mean_nearest_dist_vec)]]$distance_mat
+max_100strain_list <- rownames(max_100)
+
+## plot UMAP of selected strains
+
+plot_UMAP(strain66 %>% filter(phy_id %in% max_100strain_list))
+
+strain20_100per <- phylo_Biobank %>% filter(phy_id %in% max_100strain_list)
+write.xlsx(strain20_100per,"Strain_selected_20_from_66_ver1.xlsx")
+
+```
+
+average of lower 60% percentile
+
+```{r}
+strain20_60percentile <- sampling_func(rand_num = 10000, n = 20, lower_percentile = 0.6)
+
+  
+mean_nearest_dist_vec <- c()
+for (i in 1:rand_num){
+  mean_nearest_dist_vec[i] <- strain20_60percentile[[i]]$mean_nearest_distance
+}
+
+hist(mean_nearest_dist_vec)
+which.max(mean_nearest_dist_vec)
+strain20_60percentile[[which.max(mean_nearest_dist_vec)]]$distance_mat
+
+max_60 <- strain20_60percentile[[which.max(mean_nearest_dist_vec)]]$distance_mat
+max_60strain_list <- rownames(max_60)
+
+## plot UMAP of selected strains
+
+plot_UMAP(strain66 %>% filter(phy_id %in% max_60strain_list))
+
+strain20_60per <- phylo_Biobank %>% filter(phy_id %in% max_60strain_list)
+write.xlsx(strain20_60per,"Strain_selected_20_from_66_ver2.xlsx")
+
+```
+
+average of lower 30% percentile
+
+```{r}
+strain20_30percentile <- sampling_func(rand_num = 10000, n = 20, lower_percentile = 0.3)
+
+  
+mean_nearest_dist_vec <- c()
+for (i in 1:rand_num){
+  mean_nearest_dist_vec[i] <- strain20_30percentile[[i]]$mean_nearest_distance
+}
+
+hist(mean_nearest_dist_vec)
+which.max(mean_nearest_dist_vec)
+strain20_30percentile[[which.max(mean_nearest_dist_vec)]]$distance_mat
+
+max_30 <- strain20_30percentile[[which.max(mean_nearest_dist_vec)]]$distance_mat
+max_30strain_list <- rownames(max_30)
+
+## plot UMAP of selected strains
+
+plot_UMAP(strain66 %>% filter(phy_id %in% max_30strain_list))
+
+strain20_30per <- phylo_Biobank %>% filter(phy_id %in% max_30strain_list)
+write.xlsx(strain20_30per,"Strain_selected_20_from_66_ver3.xlsx")
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
