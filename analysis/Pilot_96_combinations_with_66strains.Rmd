@@ -76,8 +76,9 @@ my_color_collection <- c(
   '#9BC53D', '#E55934', '#FA7921', "#CD9BCD", "#508578", "#DA5724")
 
 # functions
-plot_UMAP <- function(df_Biobank){
-  ggplot(df_Biobank, aes(x=umapA1, y=umapA2)) +
+plot_UMAP <- function(strain_set){
+  phylo_Biobank_subset <- phylo_Biobank %>% filter(phy_id %in% strain_set)
+  ggplot(phylo_Biobank_subset, aes(x=umapA1, y=umapA2)) +
     xlab('\n umap A1')+
     ylab("umap A2 \n") +
     geom_point(aes(fill = genus), shape = 21 ,size=4, alpha=0.9) +
@@ -220,13 +221,42 @@ df_binary[,1]
 df_binary[,1][df_binary[,1] == T]
 
 # make a list
-mix_list <- list()
+lower_percentile = 0.3
+rit_list <- list()
+
 for (i in 1:dim(df_binary)[2]){
   print(i)
-  species <- df_binary[,i][df_binary[,i] == T]
-  mix_list[[i]] <- names(species)
+  species_set <- names(df_binary[,i][df_binary[,i] == T])
+  # calculate the distance
+  # get the coordination for species_set
+  strain20_coor <- strain66 %>% filter(phy_id %in% species_set) %>% select(phy_id, umapA1, umapA2)
+  strain20_coor <- tibble::column_to_rownames(strain20_coor, var="phy_id") # calculate distance from matrix
+  strain20_dist <- rdist(strain20_coor)
+  strain20_dist <- as.data.frame(strain20_dist)
+  rownames(strain20_dist) <- rownames(strain20_coor)
+  colnames(strain20_dist) <- rownames(strain20_coor)
+  dim(strain20_dist)
+  # get minimum distance (minimum positive)
+  nearest_dist_vec <- apply(strain20_dist, 1, FUN = function(x) {min(x[x > 0])})
+  nearest_dist_vec <- nearest_dist_vec[order(nearest_dist_vec)] # order from lowest to highest
+  # nearest distance for lower percentile
+  nearest_dist_vec[1:round(n*lower_percentile)]
+  # get mean of nearest UMAP distance
+  mean1 = mean(nearest_dist_vec[1:round(n*lower_percentile)])
+
+  rit_list[[i]] <- list(n= i,
+                        mix = species_set,
+                        dist = mean1
+  )
 }
-mix_list
+rit_list
+
+plot_UMAP(rit_list[[1]]$mix)
+plot_UMAP(rit_list[[96]]$mix)
+    
+plot_UMAP(mix_list[[1]]$mix)
+    
+    
 ```
 
 
@@ -249,7 +279,7 @@ Maximize mean nearest of lower 30% percentile.
 ```{r}
 
 # function
-pick_selection <- function(rand_num = 10000, n = 20, lower_percentile = 0.3){
+mix_selection <- function(rand_num = 10000, n = 20, lower_percentile = 0.3){
   # Sampling
   strain20_per <- sampling_func(rand_num, n, lower_percentile)
   # Distance
@@ -258,16 +288,23 @@ pick_selection <- function(rand_num = 10000, n = 20, lower_percentile = 0.3){
     mean_nearest_dist_vec[i] <- strain20_per[[i]]$mean_nearest_distance
   }
   
-  max_30 <- strain20_per[[which.max(mean_nearest_dist_vec)]]$distance_mat
-  max_30strain_list <- rownames(max_30)
-  strain20_30per <- phylo_Biobank %>% filter(phy_id %in% max_30strain_list)
+  max_set <- strain20_per[[which.max(mean_nearest_dist_vec)]]$distance_mat   # matrices
+  max_30strain_list <- rownames(max_set)  # strain_id
+  max_dist <- strain20_per[[which.max(mean_nearest_dist_vec)]]$mean_nearest_distance   # nearest distance
   
-  plot_UMAP(strain66 %>% filter(phy_id %in% max_30strain_list))
-  return(max_30strain_list)
+  # plot
+  # strain20_30per <- phylo_Biobank %>% filter(phy_id %in% max_30strain_list)
+  # plot_UMAP(strain66 %>% filter(phy_id %in% max_30strain_list))
+  
+  # return list
+  l_set <- list(n = n,
+                mix = max_30strain_list,
+                dist = max_dist)
+  return(l_set)
 }
 
 
-pick_selection(rand_num = 10000, n = 20, lower_percentile = 0.3)
+mix_selection(rand_num = 100, n = 20, lower_percentile = 0.3)
 
 ```
 
@@ -276,17 +313,45 @@ pick_selection(rand_num = 10000, n = 20, lower_percentile = 0.3)
 # Or Rita's distribution
 combination_vec <- table(colSums(df_binary))
 
-# 
+# get the combinations
+
+mix_list <- list()
+index = 1
 for (i in 1:length(combination_vec)){
   # print(i)
   com_num <- as.numeric(names(combination_vec[i]))
   replicate <- combination_vec[[i]]
   for (j in 1:replicate){
-    print(j)
-    pick <- pick_selection(rand_num = 100, n = com_num, lower_percentile = 0.3)
-    print(pick)
+    # print(j)
+    single_mix <- mix_selection(rand_num = 10000, n = com_num, lower_percentile = 0.3)
+    mix_list[[index]] <- single_mix
+    index = index + 1
   }
 }
+
+mix_list
+
+
+
+vec_n <- c()
+for (i in 1:length(mix_list)){
+  vec_n[i] <- mix_list[[i]]$n
+}
+
+hist(vec_n, breaks = 50)
+
+
+
+plot_UMAP(mix_list[[96]]$mix)
+
+```
+
+# Calculate UMAP distance for Rita's combinations
+
+```{r}
+
+
+
 
 
 
@@ -294,7 +359,6 @@ for (i in 1:length(combination_vec)){
 
 
 ```
-
 
 
 
