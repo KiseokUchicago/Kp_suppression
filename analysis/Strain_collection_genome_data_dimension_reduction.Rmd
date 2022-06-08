@@ -1,0 +1,656 @@
+---
+title: "Strain_collection_genome_data_dimension_reduction"
+author: "KiseokUchicago"
+date: "2022-05-09"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+
+```{r global_options, include=FALSE}
+library(knitr)
+knitr::opts_chunk$set(fig.width=11, fig.height=9,
+                      error=TRUE, echo=TRUE, eval=TRUE, warning=FALSE, message=FALSE,
+                      tidy.opts=list(width.cutoff=40),tidy=TRUE)
+```
+
+## Dimension reduction on Strain_collection_genome_data
+Researcher: **Kiseok Lee** \
+Analysis Date: 5/9/22
+Lab: **Seppe Kuehn**
+
+```{r, include=FALSE, echo=F}
+# libraries
+library(dplyr)
+library(ggplot2)
+library(RColorBrewer)
+library(vegan)
+library(tidyverse)
+library(magrittr)
+library(readxl)
+library(reshape2)
+library(gtools)
+library(devtools)
+library(openxlsx)
+library(ape)
+library(stringr)
+library(tidyr)
+library(ggrepel)
+library(ggpubr)
+require(gridExtra)
+library(fields)
+# grid.arrange(p_strain, p_ai, nrow=1)
+
+## theme for ggplot
+mytheme <- theme_bw() + 
+  theme(text = element_text(colour = 'black', face="bold")) +
+  theme(plot.title = element_text(size = 19,hjust = 0.5,face="bold", colour = 'black')) + 
+  theme(axis.title.x = element_text(size = 17,hjust = 0.5,face="bold", colour = 'black')) + 
+  theme(axis.title.y = element_text(size = 17,hjust = 0.5,face="bold", colour = 'black')) + 
+  theme(axis.text.x = element_text(hjust = 0.5, vjust=0.3,size=13,colour = 'black',face="bold"))+
+  theme(axis.text.y = element_text(size=13, colour = 'black', face="bold"))+
+  theme(panel.grid.major = element_blank()) +
+  theme(panel.grid.minor = element_blank(),panel.background=element_blank(),panel.border=element_blank(),plot.background=element_blank()) +
+  theme(axis.ticks = element_line(size = 1.1))+
+  theme(legend.text=element_text(size=10, colour = 'black',face="bold"))
+
+
+mytheme_2d <- theme_bw() + 
+  theme(text = element_text(colour = 'black', face="bold")) +
+  theme(plot.title = element_text(size = 19,hjust = 0.5,colour = 'black', face="bold")) + 
+  theme(axis.title.x = element_text(size = 17,hjust = 0.5,colour = 'black', face="bold")) + 
+  theme(axis.title.y = element_text(size = 17,hjust = 0.5,colour = 'black', face="bold")) + 
+  theme(axis.text.x = element_text(hjust = 0.5, vjust=0.3,size=13,colour = 'black', face="bold"))+
+  theme(axis.text.y = element_text(size=13, colour = 'black', face="bold"))+
+  # theme(panel.grid.major = element_blank()) +
+  # theme(panel.grid.minor = element_blank(),panel.background=element_blank(),plot.background=element_blank()) +
+  theme(axis.ticks = element_line(size = 1.1))+
+  theme(legend.text=element_text(size=10, colour = 'black', face="bold"))
+
+
+# color collection
+my_color_collection <- c(
+  "#CBD588", "#5F7FC7", "orange", "#AD6F3B", "#673770", 
+  "#D14285", "#652926", "#C84248", "#8569D5", "#5E738F",
+  "#D1A33D", "#8A7C64", "#599861","#616163", "#FFCDB2",
+  "#6D9F71", "#242F40",
+  "#CCA43B", "#F92A82", "#ED7B84", "#7EB77F", 
+  "#DEC4A1", "#E5D1D0", '#0E8482', '#C9DAEA', '#337357', 
+  '#95C623', '#E55812', '#04471C', '#F2D7EE', '#D3BCC0', 
+  '#A5668B', '#69306D', '#0E103D', '#1A535C', '#4ECDC4', 
+  '#F7FFF7', '#FF6B6B', '#FFE66D', '#6699CC', '#FFF275', 
+  '#FF8C42', '#FF3C38', '#A23E48', '#000000', '#CF5C36', 
+  '#EEE5E9', '#7C7C7C', '#EFC88B', '#2E5266', '#6E8898', 
+  '#9FB1BC', '#D3D0CB', '#E2C044', '#5BC0EB', '#FDE74C', 
+  '#9BC53D', '#E55934', '#FA7921', "#CD9BCD", "#508578", "#DA5724")
+
+# for git push, use this instead of using wflow_git_push()
+# git push -u origin master (in the Git app / in the working directory)
+
+# for making pdf file
+library(rmarkdown)
+# render("analysis/~~.Rmd", "pdf_document")
+```
+
+1. Import data
+
+
+```{r}
+df_strain <- read.csv('data/Strains_KOs_Cleaned_01.csv')
+colnames(df_strain)
+rownames(df_strain)
+
+df_strain <- tibble::column_to_rownames(df_strain, var="X")
+head(df_strain)
+dim(df_strain)
+rownames(df_strain)
+colnames(df_strain)
+```
+
+## 2. Apply UMAP embedding
+https://www.rdocumentation.org/packages/uwot/versions/0.1.11/topics/umap
+```{r}
+
+library(umap)
+# install.packages('Rcpp')
+any(is.na(df_strain))
+
+set.seed(1)
+umap_strain <- umap(df_strain)
+
+umap_coordinate <- umap_strain$layout
+colnames(umap_coordinate) <- c("UMAP1", "UMAP2")
+class(umap_coordinate)
+umap_coordinate <- as.data.frame(umap_coordinate)
+
+ggplot(umap_coordinate, aes(x=UMAP1, y=UMAP2)) +
+    xlab('\n umap1')+
+    ylab("umap2 \n") +
+    geom_point(shape = 16 ,size=3, alpha=0.9, color="royalblue") +
+    # scale_fill_manual(values = my_color_collection)+
+    ggtitle(paste0("UMAP embedding of gene presence/absence (Karna's library)"," \n")) +
+    # scale_x_continuous(limits = c(0, max(df_cen_wb$Degree))) +
+    # scale_y_continuous(limits = c(0, max(df_cen_wb$Betweenness))) +
+    theme(legend.text=element_text(size=13)) + 
+    # theme(legend.position="top") +
+    # theme(legend.title=element_blank()) +
+    mytheme_2d
+
+# min_dist = 0.5 x spread
+set.seed(1)
+umap_strain <- umap(df_strain, min_dist = 0.5)
+
+umap_coordinate <- umap_strain$layout
+colnames(umap_coordinate) <- c("UMAP1", "UMAP2")
+class(umap_coordinate)
+umap_coordinate <- as.data.frame(umap_coordinate)
+
+ggplot(umap_coordinate, aes(x=UMAP1, y=UMAP2)) +
+    xlab('\n umap1')+
+    ylab("umap2 \n") +
+    geom_point(shape = 16 ,size=3, alpha=0.9, color="royalblue") +
+    # scale_fill_manual(values = my_color_collection)+
+    ggtitle(paste0("[min_dist=0.5] UMAP embedding of gene presence/absence (Karna's library)"," \n")) +
+    # scale_x_continuous(limits = c(0, max(df_cen_wb$Degree))) +
+    # scale_y_continuous(limits = c(0, max(df_cen_wb$Betweenness))) +
+    theme(legend.text=element_text(size=13)) + 
+    # theme(legend.position="top") +
+    # theme(legend.title=element_blank()) +
+    mytheme_2d
+
+
+```
+
+
+
+## 3. MDS
+Use euclidean distance
+```{r}
+# 
+euclidean_strain <- dist(df_strain)
+head(euclidean_strain)
+tail(euclidean_strain)
+
+# NMDS
+library(MASS)
+fit <- isoMDS(euclidean_strain, k=2) # k is the number of dim
+fit # view results
+
+# other method
+set.seed(2)
+NMDS <- metaMDS(euclidean_strain, k = 2, trymax = 1000, trace = F)
+
+stressplot(NMDS) # There is a good non-metric fit between observed dissimilarities (in our distance matrix) and the distances in ordination space.
+
+df_nmds <- as.data.frame(NMDS$points)
+dim(df_nmds)
+NMDS$stress
+
+# get depth
+# split sample lable to get the depth SRF, DCM, MES
+# list_depth <- str_split(rownames(df_nmds), "_")
+# vec_depth <- c()
+# for (i in 1:length(list_depth)){
+#   #print(i)
+#   # print(list_depth[[i]][3])
+#   vec_depth[i] <- list_depth[[i]][3]
+# }
+#   
+# df_nmds$Depth <- vec_depth
+# 
+# # merge metadata
+# df_nmds <- tibble::rownames_to_column(df_nmds, var="Sample.label")
+# df_merged <- df_nmds %>% left_join(df_meta, by = c("Sample.label"="Sample.label"))
+# dim(df_merged)
+# colnames(df_merged)
+
+# plot NMDS
+ggplot(df_nmds, aes(x=MDS1,y=MDS2))+
+  theme(plot.title = element_text(size = 20,hjust = 0.5, face="bold")) +
+  geom_point(size = 3, alpha=0.9, color = 'maroon')+
+  scale_fill_manual(values=cols) +
+  xlab(paste0('\n NMDS1'))+
+  ylab(paste0("NMDS2")) +
+  ggtitle(paste0("Non-metric multidimensional scaling(NMDS) of gene presence/absence (Karna's library) (Stress:", round(NMDS$stress, 5),") \n")) +
+  ## adjust positions
+  guides(fill = guide_legend(ncol = 4,reverse = T))+
+  theme(legend.position="bottom") +
+  mytheme_2d
+
+```
+
+## 4. tSNE
+```{r}
+library(tsne)
+rownames(df_strain)
+df_tsne <- tsne(euclidean_strain, k=2)
+rownames(df_tsne) <- rownames(df_strain)
+colnames(df_tsne) <-c("tSNE1", "tSNE2")
+df_tsne <- as.data.frame(df_tsne)
+
+# plot tSNE
+ggplot(df_tsne, aes(x=tSNE1,y=tSNE2))+
+  theme(plot.title = element_text(size = 20,hjust = 0.5, face="bold")) +
+  geom_point(size = 3, alpha=0.9, color = 'purple')+
+  scale_fill_manual(values=cols) +
+  xlab(paste0('\n t-SNE1'))+
+  ylab(paste0("t-SNE2 \n")) +
+  ggtitle(paste0("t-SNE embedding of gene presence/absence (Karna's library) \n")) +
+  ## adjust positions
+  guides(fill = guide_legend(ncol = 4,reverse = T))+
+  theme(legend.position="bottom") +
+  mytheme_2d
+
+```
+
+## 5. Phylogenetic distance
+
+```{r}
+dist_phylo <- read.csv('data/Phylo_Dist_Ahmed.csv')
+colnames(dist_phylo)
+rownames(dist_phylo)
+tail(dist_phylo)
+
+dist_phylo <- tibble::column_to_rownames(dist_phylo, var="X")
+head(dist_phylo)
+dim(dist_phylo)
+rownames(dist_phylo)
+colnames(dist_phylo)
+
+# NMDS
+# other method
+set.seed(2)
+NMDS <- metaMDS(dist_phylo, k = 2, trymax = 1000, trace = F)
+
+stressplot(NMDS) # There is a good non-metric fit between observed dissimilarities (in our distance matrix) and the distances in ordination space.
+
+df_nmds <- as.data.frame(NMDS$points)
+dim(df_nmds)
+NMDS$stress
+
+
+# plot NMDS
+ggplot(df_nmds, aes(x=MDS1,y=MDS2))+
+  theme(plot.title = element_text(size = 20,hjust = 0.5, face="bold")) +
+  geom_point(size = 3, alpha=0.9, color = 'maroon')+
+  scale_fill_manual(values=cols) +
+  xlab(paste0('\n NMDS1'))+
+  ylab(paste0("NMDS2")) +
+  ggtitle(paste0("Non-metric multidimensional scaling(NMDS) of 16S rRNA distance (Karna's library) (Stress:", round(NMDS$stress, 5),") \n")) +
+  ## adjust positions
+  guides(fill = guide_legend(ncol = 4,reverse = T))+
+  theme(legend.position="bottom") +
+  mytheme_2d
+
+```
+
+## 6. Let's select strains with UMAP embedding data.
+
+```{r}
+# function
+
+# example
+strain_set = vec_pool_strains[1:4]
+umap_coordinate$Color = ifelse(rownames(umap_coordinate) %in% strain_set ,"red", "blue")
+
+plot_UMAP <- function(strain_set){
+  umap_subset <- umap_coordinate[strain_set,]
+  ggplot(umap_subset, aes(x=UMAP1, y=UMAP2)) +
+    xlab('\n umap1')+
+    ylab("umap2 \n") +
+    geom_point(shape = 16 ,size=3, alpha=0.9, color="royalblue") +
+    # scale_fill_manual(values = my_color_collection)+
+    ggtitle(paste0("UMAP coordination"," \n")) +
+    scale_x_continuous(limits = c(-7, 10)) +
+    scale_y_continuous(limits = c(-11, 10)) +
+    theme(legend.text=element_text(size=13)) + 
+    # theme(legend.position="top") +
+    # theme(legend.title=element_blank()) +
+    mytheme_2d
+} 
+
+plot_UMAP_mixnum <- function(strain_set, i){
+  umap_subset <- umap_coordinate[strain_set,]
+  ggplot(umap_subset, aes(x=UMAP1, y=UMAP2)) +
+    xlab('umap1')+
+    ylab("umap2") +
+    geom_point(shape = 16 ,size=3, alpha=0.9, color="red") +
+    # scale_fill_manual(values = my_color_collection)+
+    ggtitle(paste0("mix",i)) +
+    scale_x_continuous(limits = c(-7, 10)) +
+    scale_y_continuous(limits = c(-11, 10)) +
+    theme(legend.text=element_text(size=13)) + 
+    # theme(legend.position="top") +
+    # theme(legend.title=element_blank()) +
+    mytheme_2d
+}
+
+plot_UMAP_all <- function(strain_set, i){
+  umap_color <- umap_coordinate
+  umap_color$Color = ifelse(rownames(umap_color) %in% strain_set ,"Selected", "Other strains")
+  umap_color <- as.data.frame(umap_color)
+
+  ggplot(umap_color, aes(x=UMAP1, y=UMAP2)) +
+    xlab('umap1')+
+    ylab("umap2") +
+    geom_point(shape = 16 ,alpha=0.9, aes(color=Color, size = Color)) +
+    # scale_size(range = c(2, 5)) +
+    scale_color_manual(values =c("blue", "red"))+
+    ggtitle(paste0("mix",i)) +
+    scale_x_continuous(limits = c(-7, 10)) +
+    scale_y_continuous(limits = c(-11, 10)) +
+    theme(legend.text=element_text(size=13)) + 
+    # theme(legend.position="top") +
+    # theme(legend.title=element_blank()) +
+    mytheme_2d
+} 
+
+```
+
+
+```{r}
+# data input
+set.seed(1)
+umap_strain <- umap(df_strain, min_dist = 0.5)
+
+umap_coordinate <- umap_strain$layout
+colnames(umap_coordinate) <- c("UMAP1", "UMAP2")
+class(umap_coordinate)
+umap_coordinate <- as.data.frame(umap_coordinate)
+
+ggplot(umap_coordinate, aes(x=UMAP1, y=UMAP2)) +
+    xlab('\n umap1')+
+    ylab("umap2 \n") +
+    geom_point(shape = 16 ,size=3, alpha=0.9, color="royalblue") +
+    # scale_fill_manual(values = my_color_collection)+
+    ggtitle(paste0("[min_dist=0.5] UMAP embedding of gene presence/absence (Karna's library)"," \n")) +
+    scale_x_continuous(limits = c(-7, 10)) +
+    scale_y_continuous(limits = c(-11, 10)) +
+    theme(legend.text=element_text(size=13)) + 
+    # theme(legend.position="top") +
+    # theme(legend.title=element_blank()) +
+    mytheme_2d
+
+umap_coordinate
+dim(umap_coordinate)
+rownames(umap_coordinate)
+
+# get Rita's list of strains
+vec_pool_strains <- rownames(umap_coordinate) # 84 strains
+
+# sample from 84 strains
+# execute function
+sampling_func_pool <- function(umap_coordinate, rand_num, vec_pool_strains, n, lower_percentile){
+  # empty list
+  sampling20_list <- list() 
+  
+  # do sampling for rand_num of times
+  for (rand in 1:rand_num){
+    # print(rand)
+    # random sampling
+    strain20_rand <- sample(vec_pool_strains, n)
+    strain20_coor <- umap_coordinate[strain20_rand,]
+    strain20_dist <- rdist(strain20_coor)
+    dim(strain20_dist)
+    strain20_dist <- as.data.frame(strain20_dist)
+    rownames(strain20_dist) <- rownames(strain20_coor)
+    colnames(strain20_dist) <- rownames(strain20_coor)
+    head(strain20_dist)
+    
+    # get minimum distance (minimum positive)
+    nearest_dist_vec <- apply(strain20_dist, 1, FUN = function(x) {min(x[x > 0])})
+    nearest_dist_vec <- nearest_dist_vec[order(nearest_dist_vec)] # order from lowest to highest
+    
+    # nearest distance for lower percentile
+    nearest_dist_vec[1:round(n*lower_percentile)]
+    # get mean of nearest UMAP distance
+    mean1 = mean(nearest_dist_vec[1:round(n*lower_percentile)])
+    
+    # save in list
+    sampling20_list[[rand]] <- list(
+      mean_nearest_distance = mean1,
+      distance_mat = strain20_dist
+    )
+  }
+  return(sampling20_list)
+}
+
+# combinations function (slight modification of sampling function)
+mix_selection_pool <- function(umap_coordinate, rand_num, vec_pool_strains, n, lower_percentile){
+  # Sampling
+  strain20_per <- sampling_func_pool(umap_coordinate, rand_num, vec_pool_strains, n, lower_percentile)
+  # Distance
+  mean_nearest_dist_vec <- c()
+  for (i in 1:rand_num){
+    mean_nearest_dist_vec[i] <- strain20_per[[i]]$mean_nearest_distance
+  }
+  
+  max_set <- strain20_per[[which.max(mean_nearest_dist_vec)]]$distance_mat   # matrices
+  max_30strain_list <- rownames(max_set)  # strain_id
+  max_dist <- strain20_per[[which.max(mean_nearest_dist_vec)]]$mean_nearest_distance   # nearest distance
+  
+  # plot
+  # strain20_30per <- phylo_Biobank %>% filter(phy_id %in% max_30strain_list)
+  # plot_UMAP(strain66 %>% filter(phy_id %in% max_30strain_list))
+  
+  # return list
+  l_set <- list(n = n,
+                mix = max_30strain_list,
+                dist = max_dist)
+  return(l_set)
+}
+
+# testing if it works
+sampling_func_pool(umap_coordinate, rand_num=100, vec_pool_strains, n=4, lower_percentile=0.3)
+mix_selection_pool(umap_coordinate, rand_num=100, vec_pool_strains, n=2, lower_percentile=0.3)
+
+# Histogram and sampling scheme
+vec_comm <- c(rep(2,3), rep(4,4), rep(6,6), rep(8,4), rep(10,3))
+hist(vec_comm, breaks=20, main="Sampling scheme with UMAP distance", xlab="Number of strains in a community")
+
+# Start selecting
+mix_list <- list()
+# Takes a long time
+for (j in 1:length(vec_comm)){
+  com_num = vec_comm[j]
+  print(paste0("Number of strains in this community is: ",com_num))
+  single_mix <- mix_selection_pool(umap_coordinate, rand_num = 10000, vec_pool_strains, n = com_num, lower_percentile = 0.3)
+  mix_list[[j]] <- single_mix
+}
+
+# importing the mix_list that we generated before.
+
+mix_list[[1]]$n
+mix_list[[1]]$dist
+
+for (i in 1:length(vec_comm)){
+  print(i)
+  print(mix_list[[i]]$dist)
+}
+
+mix_list_save <- mix_list
+mix_list_save2 <- mix_list
+
+vec_n <- c()
+for (i in 1:length(mix_list)){
+ vec_n[i] <- mix_list[[i]]$n
+}
+hist(vec_n, breaks = 50)
+
+
+plot_UMAP(mix_list[[4]]$mix)
+
+mix_list[[2]]
+
+# plot_UMAP
+l_plot <- list()
+for (i in 1:length(vec_comm)){
+  print(i)
+  l_plot[[i]] <- plot_UMAP_mixnum(mix_list[[i]]$mix, i)
+}
+
+library(gridExtra)
+grid.arrange(grobs = l_plot, ncol=5)
+
+
+# plot_UMAP_all
+l_plot <- list()
+for (i in 1:length(vec_comm)){
+  print(i)
+  l_plot[[i]] <- plot_UMAP_all(mix_list[[i]]$mix, i)
+}
+
+library(gridExtra)
+grid.arrange(grobs = l_plot, ncol=5)
+
+```
+
+The problem is that there are duplicates.. how can I solve this? less replicates
+```{r}
+# data
+set.seed(1)
+umap_strain <- umap(df_strain, min_dist = 0.5)
+
+umap_coordinate <- umap_strain$layout
+colnames(umap_coordinate) <- c("UMAP1", "UMAP2")
+class(umap_coordinate)
+umap_coordinate <- as.data.frame(umap_coordinate)
+
+# Start selecting
+mix_list2 <- list()
+# Takes a long time
+for (j in 1:length(vec_comm)){
+  com_num = vec_comm[j]
+  print(paste0("Number of strains in this community is: ",com_num))
+  single_mix <- mix_selection_pool(umap_coordinate, rand_num = 500, vec_pool_strains, n = com_num, lower_percentile = 0.3)
+  mix_list2[[j]] <- single_mix
+}
+
+# importing the mix_list2 that we generated before.
+
+mix_list2[[1]]$n
+mix_list2[[1]]$dist
+
+for (i in 1:length(vec_comm)){
+  print(i)
+  print(mix_list2[[i]]$dist)
+}
+
+for (i in 1:length(vec_comm)){
+  print(i)
+  print(mix_list2[[i]]$mix)
+}
+
+mix_list2_save <- mix_list2
+mix_list2_save2 <- mix_list2
+
+vec_n <- c()
+for (i in 1:length(mix_list2)){
+ vec_n[i] <- mix_list2[[i]]$n
+}
+hist(vec_n, breaks = 50)
+
+## let's check if any of these communities are identical
+l_vector = list()
+
+for (i in 1:length(vec_comm)){
+  print(i)
+  l_vector[[i]] <- mix_list2[[i]]$mix
+}
+
+l_vector
+length(l_vector)
+
+l_vector[-1]
+all(sapply(l_vector[-1], FUN = identical, l_vector[[1]]))
+all(!(sapply(l_vector, FUN = identical, l_vector[[1]])))
+
+for (i in 1:length(l_vector)){
+  # print(i)
+  answer <- all(!(sapply(l_vector[-i], FUN = identical, l_vector[[i]]))) # is it all distinct from other communities?
+  # print(answer)
+  print(paste0("Comparing with community ",i, ": distinct? ", answer))
+  # print(sapply(l_vector[-i], FUN = identical, l_vector[[i]]))
+}
+
+# true
+
+plot_UMAP(mix_list2[[4]]$mix)
+
+mix_list2[[2]]
+
+# plot_UMAP
+l_plot <- list()
+for (i in 1:length(vec_comm)){
+  print(i)
+  l_plot[[i]] <- plot_UMAP_mixnum(mix_list2[[i]]$mix, i)
+}
+
+library(gridExtra)
+grid.arrange(grobs = l_plot, ncol=5)
+
+
+# plot_UMAP_all
+l_plot <- list()
+for (i in 1:length(vec_comm)){
+  print(i)
+  l_plot[[i]] <- plot_UMAP_all(mix_list2[[i]]$mix, i)
+}
+
+library(gridExtra)
+grid.arrange(grobs = l_plot, ncol=5)
+
+
+# export the list to excel
+# strain vector
+vec_pool_strains
+
+# get the $mix part of the mix_list2
+strains_20_list <- list() 
+for (i in 1:length(mix_list2)){
+  strains_20_list[[length(strains_20_list)+1]] <- mix_list2[[i]]$mix
+}
+length(strains_20_list)
+strains_20_list
+
+# list to matrix
+library(ComplexHeatmap)
+strains_set_mat <- list_to_matrix(strains_20_list, universal_set = vec_pool_strains)
+dim(strains_set_mat)
+colSums(strains_set_mat)
+class(strains_set_mat)
+
+# list to matrix with reshape melt function
+# library(reshape2)
+# strains_set_melt <- melt(strains_20_list)
+# strains_set_table <- table(strains_set_melt)
+
+# set column names
+colSums(strains_set_mat)
+colnames(strains_set_mat) <- paste0("Mix",1:dim(strains_set_mat)[2],"_n", colSums(strains_set_mat))
+strains_set_df <- as.data.frame(strains_set_mat)
+dim(strains_set_df)
+rownames(strains_set_df)
+
+# Make order match with Rita's excel file
+strains_set_excel <- strains_set_df[order(match(rownames(strains_set_df), vec_pool_strains)), , drop=F]
+vec_pool_strains
+rownames(strains_set_excel)
+
+# transpose to have strain name in column
+strains_set_excel <- t(strains_set_excel)
+vec_pool_strains
+colnames(strains_set_excel)
+
+openxlsx::write.xlsx(strains_set_excel,"220514_Community_design_UMAP_distance_maximization_KS_from_Karna_84_Strain.xlsx",rowNames = T)
+
+
+```
+
+
+
+
+
+
+

@@ -14,10 +14,10 @@ knitr::opts_chunk$set(fig.width=11, fig.height=9,
 ```
 
 ## Pilot experiment: Pilot_96_combinations_with_66strains
-Confirm Rita's 96 combinations and compare with null.
-96 combinations would be in Gaussian distribution (mean 20, max 40, min 2)
-**Kiseok Lee** 
-PI: **Seppe Kuehn**, **Arjun Raman**
+Confirm Rita's 96 combinations and compare with null.\
+96 combinations would be in Gaussian distribution (mean 20, max 40, min 2) \
+Community design: **Kiseok Lee** \ 
+PI: **Seppe Kuehn**, **Arjun Raman** \
 
 
 ```{r}
@@ -36,6 +36,7 @@ library(openxlsx)
 library(ape)
 library(picante)
 library(fields)
+library(tidyr)
 
 ## theme for ggplot
 mytheme <- theme_bw() + 
@@ -294,7 +295,7 @@ table(colSums(df_binary))
 ```
 
 
-Maximize mean nearest of lower 30% percentile.
+## Maximize mean nearest of lower 30% percentile.
 
 ```{r}
 
@@ -328,7 +329,7 @@ mix_selection(rand_num = 100, n = 2, lower_percentile = 0.3)
 
 ```
 
-# Get 96 combination
+## Get 96 combination
 ```{r}
 # Or Rita's distribution
 combination_vec <- table(colSums(df_binary))
@@ -337,42 +338,373 @@ combination_vec <- table(colSums(df_binary))
 
 mix_list <- list()
 index = 1
-for (i in 1:length(combination_vec)){
-  # print(i)
-  com_num <- as.numeric(names(combination_vec[i]))
-  replicate <- combination_vec[[i]]
-  for (j in 1:replicate){
-    # print(j)
-    single_mix <- mix_selection(rand_num = 10000, n = com_num, lower_percentile = 0.3)
-    mix_list[[index]] <- single_mix
-    index = index + 1
-  }
+##### Already ran this script below (takes a long time)
+# for (i in 1:length(combination_vec)){
+#   # print(i)
+#   com_num <- as.numeric(names(combination_vec[i]))
+#   replicate <- combination_vec[[i]]
+#   for (j in 1:replicate){
+#     # print(j)
+#     single_mix <- mix_selection(rand_num = 10000, n = com_num, lower_percentile = 0.3)
+#     mix_list[[index]] <- single_mix
+#     index = index + 1
+#   }
+# }
+
+# importing the mix_list that we generated before.
+
+# mix_list[[1]]$n
+# mix_list[[1]]$dist
+# mix_list_save <- mix_list
+# mix_list_save2 <- mix_list
+# 
+# 
+# vec_n <- c()
+# for (i in 1:length(mix_list)){
+#   vec_n[i] <- mix_list[[i]]$n
+# }
+# 
+# hist(vec_n, breaks = 50)
+# 
+# 
+# 
+# plot_UMAP(mix_list[[96]]$mix)
+
+```
+
+## (Upon Seppe's request - 3/26/22) Get additional 20 of 20 stain community
+```{r}
+# 20 communities that has 20 strains
+mix20_list <- list()
+index = 1
+com_num <- 20
+replicate <- 20
+
+# Takes a long time
+# for (j in 1:replicate){
+#   # print(j)
+#   single_mix <- mix_selection(rand_num = 10000, n = com_num, lower_percentile = 0.3)
+#   mix20_list[[index]] <- single_mix
+#   index = index + 1
+# }
+
+# importing the mix_list that we generated before.
+
+mix20_list[[1]]$n
+mix20_list[[1]]$dist
+
+for (i in 1:com_num){
+  print(i)
+  print(mix20_list[[i]]$dist)
 }
 
-mix_list[[1]]$n
-mix_list[[1]]$dist
-mix_list_save <- mix_list
-mix_list_save2 <- mix_list
+mix20_list_save <- mix20_list
+mix20_list_save2 <- mix20_list
 
+vec_n <- c()
+for (i in 1:length(mix20_list)){
+ vec_n[i] <- mix20_list[[i]]$n
+}
+hist(vec_n, breaks = 50)
+
+
+plot_UMAP(mix20_list[[4]]$mix)
+
+l_plot <- list()
+for (i in 1:com_num){
+  print(i)
+  l_plot[[i]] <- plot_UMAP(mix20_list[[i]]$mix)
+}
+
+grid.arrange(grobs = l_plot, ncol=4)
+
+# export the list to excel
+# strain vector
+strains_vec
+
+# get the $mix part of the mix20_list
+strains_20_list <- list() 
+for (i in 1:length(mix20_list)){
+  strains_20_list[[length(strains_20_list)+1]] <- mix20_list[[i]]$mix
+}
+length(strains_20_list)
+strains_20_list
+
+# list to matrix
+library(ComplexHeatmap)
+strains_set_mat <- list_to_matrix(strains_20_list, universal_set = strains_vec)
+dim(strains_set_mat)
+colSums(strains_set_mat)
+class(strains_set_mat)
+
+# list to matrix with reshape melt function
+# library(reshape2)
+# strains_set_melt <- melt(strains_20_list)
+# strains_set_table <- table(strains_set_melt)
+
+# set column names
+colnames(strains_set_mat) <- paste0("Control",1:dim(strains_set_mat)[2],"_n",20)
+strains_set_df <- as.data.frame(strains_set_mat)
+dim(strains_set_df)
+
+# Make order match with Rita's excel file
+strains_set_excel <- strains_set_df[order(match(rownames(strains_set_df), strains_vec)), , drop=F]
+openxlsx::write.xlsx(strains_set_excel,"220326_20_Community_members_UMAP_dispersal_maximization_KS.xlsx",rowNames = T)
+
+# checking overlap with previous mix
+df_overlap <- openxlsx::read.xlsx("220326_20_Community_members_UMAP_dispersal_maximization_KS_overlap_check.xlsx")
+df_overlap
+dim(df_overlap)
+df_overlap <- tibble::remove_rownames(df_overlap)
+df_overlap <- tibble::column_to_rownames(df_overlap, var="X1")
+
+l_vector = list()
+
+for (i in 1:ncol(df_overlap)){
+  print(i)
+  l_vector[[i]] <- df_overlap[,i]
+}
+
+l_vector
+length(l_vector)
+# confirm 20
+for (i in 1:length(l_vector)){
+  #print(i)
+  print(sum(l_vector[[i]]))
+}
+
+l_vector[-1]
+all(sapply(l_vector[-1], FUN = identical, l_vector[[1]]))
+all(!(sapply(l_vector, FUN = identical, l_vector[[1]])))
+
+
+for (i in 1:length(l_vector)){
+  # print(i)
+  answer <- all(!(sapply(l_vector[-i], FUN = identical, l_vector[[i]]))) # is it all distinct from other communities?
+  # print(answer)
+  print(paste0("Comparing with community ",i, ": distinct? ", answer))
+  # print(sapply(l_vector[-i], FUN = identical, l_vector[[i]]))
+}
+
+```
+
+## (Redoing with updated strain list) Get additional 20 of 20 stain community
+
+```{r}
+# get Rita's list of strains
+df_46strains <- openxlsx::read.xlsx("data/Rita_Matrix_Kp_CFUs_Communities_composition_updatedMarch26.xlsx")
+head(df_46strains)
+colnames(df_46strains)
+vec_pool_strains <- colnames(df_46strains)[c(-1,-ncol(df_46strains))]
+
+strain66$phy_id
+vec_pool_strains
+intersect(strain66$phy_id, vec_pool_strains) # 46 strains are all included in 66 strains.
+
+# sample from 46 strains
+# execute function
+sampling_func_pool <- function(rand_num, vec_pool_strains, n, lower_percentile){
+  # empty list
+  sampling20_list <- list() 
+  
+  # do sampling for rand_num of times
+  for (rand in 1:rand_num){
+    # print(rand)
+    # random sampling
+    strain20_rand <- sample(vec_pool_strains, n)
+    strain20_coor <- strain66 %>% filter(phy_id %in% strain20_rand) %>% select(phy_id, umapA1, umapA2)
+    strain20_coor <- tibble::column_to_rownames(strain20_coor, var="phy_id") 
+    strain20_dist <- rdist(strain20_coor)
+    dim(strain20_dist)
+    strain20_dist <- as.data.frame(strain20_dist)
+    rownames(strain20_dist) <- rownames(strain20_coor)
+    colnames(strain20_dist) <- rownames(strain20_coor)
+    head(strain20_dist)
+    
+    # get minimum distance (minimum positive)
+    nearest_dist_vec <- apply(strain20_dist, 1, FUN = function(x) {min(x[x > 0])})
+    nearest_dist_vec <- nearest_dist_vec[order(nearest_dist_vec)] # order from lowest to highest
+    
+    # nearest distance for lower percentile
+    nearest_dist_vec[1:round(n*lower_percentile)]
+    # get mean of nearest UMAP distance
+    mean1 = mean(nearest_dist_vec[1:round(n*lower_percentile)])
+    
+    # save in list
+    sampling20_list[[rand]] <- list(
+      mean_nearest_distance = mean1,
+      distance_mat = strain20_dist
+    )
+  }
+  return(sampling20_list)
+}
+
+# combinations function (slight modification of sampling function)
+mix_selection_pool <- function(rand_num, vec_pool_strains, n, lower_percentile){
+  # Sampling
+  strain20_per <- sampling_func_pool(rand_num, vec_pool_strains, n, lower_percentile)
+  # Distance
+  mean_nearest_dist_vec <- c()
+  for (i in 1:rand_num){
+    mean_nearest_dist_vec[i] <- strain20_per[[i]]$mean_nearest_distance
+  }
+  
+  max_set <- strain20_per[[which.max(mean_nearest_dist_vec)]]$distance_mat   # matrices
+  max_30strain_list <- rownames(max_set)  # strain_id
+  max_dist <- strain20_per[[which.max(mean_nearest_dist_vec)]]$mean_nearest_distance   # nearest distance
+  
+  # plot
+  # strain20_30per <- phylo_Biobank %>% filter(phy_id %in% max_30strain_list)
+  # plot_UMAP(strain66 %>% filter(phy_id %in% max_30strain_list))
+  
+  # return list
+  l_set <- list(n = n,
+                mix = max_30strain_list,
+                dist = max_dist)
+  return(l_set)
+}
+
+
+# 20 communities that has 20 strains
+mix20_list <- list()
+com_num <- 20
+replicate <- 20
+
+# Takes a long time
+# for (j in 1:replicate){
+#   # print(j)
+#   single_mix <- mix_selection_pool(rand_num = 10000, vec_pool_strains, n = com_num, lower_percentile = 0.3)
+#   mix20_list[[j]] <- single_mix
+# }
+
+# importing the mix_list that we generated before.
+
+mix20_list[[1]]$n
+mix20_list[[1]]$dist
+
+for (i in 1:com_num){
+  print(i)
+  print(mix20_list[[i]]$dist)
+}
+
+mix20_list_save <- mix20_list
+mix20_list_save2 <- mix20_list
+
+vec_n <- c()
+for (i in 1:length(mix20_list)){
+ vec_n[i] <- mix20_list[[i]]$n
+}
+hist(vec_n, breaks = 50)
+
+
+plot_UMAP(mix20_list[[4]]$mix)
+
+l_plot <- list()
+for (i in 1:com_num){
+  print(i)
+  l_plot[[i]] <- plot_UMAP(mix20_list[[i]]$mix)
+}
+
+library(gridExtra)
+grid.arrange(grobs = l_plot, ncol=4)
+
+# export the list to excel
+# strain vector
+vec_pool_strains
+
+# get the $mix part of the mix20_list
+strains_20_list <- list() 
+for (i in 1:length(mix20_list)){
+  strains_20_list[[length(strains_20_list)+1]] <- mix20_list[[i]]$mix
+}
+length(strains_20_list)
+strains_20_list
+
+# list to matrix
+library(ComplexHeatmap)
+strains_set_mat <- list_to_matrix(strains_20_list, universal_set = vec_pool_strains)
+dim(strains_set_mat)
+colSums(strains_set_mat)
+class(strains_set_mat)
+
+# list to matrix with reshape melt function
+# library(reshape2)
+# strains_set_melt <- melt(strains_20_list)
+# strains_set_table <- table(strains_set_melt)
+
+# set column names
+colnames(strains_set_mat) <- paste0("Control",1:dim(strains_set_mat)[2],"_n",20)
+strains_set_df <- as.data.frame(strains_set_mat)
+dim(strains_set_df)
+rownames(strains_set_df)
+
+# Make order match with Rita's excel file
+strains_set_excel <- strains_set_df[order(match(rownames(strains_set_df), vec_pool_strains)), , drop=F]
+vec_pool_strains
+rownames(strains_set_excel)
+
+# transpose to have strain name in column
+strains_set_excel <- t(strains_set_excel)
+vec_pool_strains
+colnames(strains_set_excel)
+
+openxlsx::write.xlsx(strains_set_excel,"220327_20_Community_members_UMAP_dispersal_maximization_KS_from_46_Strain.xlsx",rowNames = T)
+
+# checking overlap with previous mix
+df_overlap <- openxlsx::read.xlsx("220327_20_Community_members_UMAP_dispersal_maximization_KS_from_46_Strain.xlsx")
+df_overlap
+colnames(df_overlap)
+dim(df_overlap)
+df_overlap <- tibble::remove_rownames(df_overlap)
+colnames(df_overlap)[1] <- "X1"
+df_overlap <- tibble::column_to_rownames(df_overlap, var="X1")
+colnames(df_overlap)
+dim(df_overlap)
+
+l_vector = list()
+
+for (i in 1:nrow(df_overlap)){
+  print(i)
+  l_vector[[i]] <- df_overlap[i,]
+}
+
+l_vector
+length(l_vector)
+# confirm 20
+for (i in 1:length(l_vector)){
+  #print(i)
+  print(sum(l_vector[[i]]))
+}
+
+l_vector[-1]
+all(sapply(l_vector[-1], FUN = identical, l_vector[[1]]))
+all(!(sapply(l_vector, FUN = identical, l_vector[[1]])))
+
+
+for (i in 1:length(l_vector)){
+  # print(i)
+  answer <- all(!(sapply(l_vector[-i], FUN = identical, l_vector[[i]]))) # is it all distinct from other communities?
+  # print(answer)
+  print(paste0("Comparing with community ",i, ": distinct? ", answer))
+  # print(sapply(l_vector[-i], FUN = identical, l_vector[[i]]))
+}
+
+```
+
+
+
+## Compare the distance for our maximized combinations and Rita's
+```{r}
+# making the dataframe for distance
+
+# distance generated by the program
+# mix_list <- mix_list_retrieved
 
 vec_n <- c()
 for (i in 1:length(mix_list)){
   vec_n[i] <- mix_list[[i]]$n
 }
 
-hist(vec_n, breaks = 50)
-
-
-
-plot_UMAP(mix_list[[96]]$mix)
-
-```
-
-# Compare the distance for our maximized combinations and Rita's
-```{r}
-# making the dataframe for distance
-
-# distance generated by the program
 vec_dist_mix <- c()
 for (i in 1:length(mix_list)){
   vec_dist_mix[i] <- mix_list[[i]]$dist
@@ -409,7 +741,7 @@ ggplot(df_dist_avg_compare, aes(x=n, y=avg_dist, fill=selection)) +
 
 ```
 
-# Get excel output for the combinations
+## Get excel output for the combinations
 
 ```{r}
 # strain vector
@@ -445,7 +777,7 @@ strains_set_excel <- strains_set_df[order(match(rownames(strains_set_df), strain
 openxlsx::write.xlsx(strains_set_excel,"96_Community_members_maximization_KS.xlsx",rowNames = T)
 ```
 
-# checking overlap between mixes
+## checking overlap between mixes
 
 ```{r}
 # import
@@ -480,9 +812,9 @@ for (i in 1:dim(df_f)[2]){
       vec_j <- names(df_f[,j][df_f[,j] == T])
       intersect(vec_i, vec_j)
       # intersect count
-      print(paste0("Mix",colnames(df_f)[i]," and Mix", colnames(df_f)[j]," :",length(intersect(vec_i, vec_j))))
+      print(paste0(colnames(df_f)[i]," and ", colnames(df_f)[j]," :",length(intersect(vec_i, vec_j))))
       # intersect ratio : count / number of members in the bigger community
-      print(paste0("Mix",colnames(df_f)[i]," and Mix", colnames(df_f)[j]," :",
+      print(paste0(colnames(df_f)[i]," and ", colnames(df_f)[j]," :",
                    round(length(intersect(vec_i, vec_j))/min(length(vec_i),length(vec_j)), 3 )))
       heatmap_mat[i,j] <- round(length(intersect(vec_i, vec_j))/min(length(vec_i),length(vec_j)), 3)
     }
@@ -491,6 +823,7 @@ for (i in 1:dim(df_f)[2]){
 
 # Matrix
 heatmap_mat
+write.xlsx(heatmap_mat, "overlap_ratio_matrix.xlsx", row.names =T)
 heatmap(heatmap_mat, Rowv=NA, Colv=NA, col = cm.colors(256), scale="column", margins=c(5,10))
 heatmap(heatmap_mat)
 
@@ -514,7 +847,118 @@ hist(df_heatmap$value[!is.na(df_heatmap$value)], xlab = "Overlap ratio (intersec
 
 ```
 
-# Getting the well number for the experiment pipetting
+## Get the UMAP plot for all 96 combinations
+```{r}
+head(df_final_binary)
+
+
+
+lower_percentile = 0.3
+mix_list_retrieved <- list()
+for (i in 1:dim(df_final_binary)[2]){
+  print(i)
+  species_set <- names(df_final_binary[,i][df_final_binary[,i] == T])
+  # calculate the distance
+  # get the coordination for species_set
+  strain20_coor <- strain66 %>% filter(phy_id %in% species_set) %>% select(phy_id, umapA1, umapA2)
+  strain20_coor <- tibble::column_to_rownames(strain20_coor, var="phy_id") # calculate distance from matrix
+  strain20_dist <- rdist(strain20_coor)
+  strain20_dist <- as.data.frame(strain20_dist)
+  rownames(strain20_dist) <- rownames(strain20_coor)
+  colnames(strain20_dist) <- rownames(strain20_coor)
+  dim(strain20_dist)
+  # get minimum distance (minimum positive)
+  nearest_dist_vec <- apply(strain20_dist, 1, FUN = function(x) {min(x[x > 0])})
+  nearest_dist_vec <- nearest_dist_vec[order(nearest_dist_vec)] # order from lowest to highest
+  # nearest distance for lower percentile
+  nearest_dist_vec[1:round(length(species_set)*lower_percentile)]
+  # get mean of nearest UMAP distance
+  mean1 = mean(nearest_dist_vec[1:round(length(species_set)*lower_percentile)])
+
+  mix_list_retrieved[[i]] <- list(n= length(species_set),
+                        mix = species_set,
+                        dist = mean1,
+                        comb_id = colnames(df_final_binary)[i]
+  )
+}
+mix_list_retrieved
+mix_list_retrieved[[1]]$n
+mix_list_retrieved[[93]]$comb_id
+mix_list_retrieved[[2]]$dist
+mix_list_retrieved[[14]]$mix
+
+
+plot_UMAP(mix_list_retrieved[[2]]$mix) + ggtitle(mix_list_retrieved[[2]]$comb_id)
+
+vec_n
+
+# plot UMAP in multiple grids
+library(gridExtra)
+l <- list()
+for (i in 1:96){
+  print(i)
+  l[[i]] <- plot_UMAP(mix_list_retrieved[[i]]$mix) + ggtitle(mix_list_retrieved[[i]]$comb_id)
+}
+length(l)
+
+l1 <- list() # 1:20
+l2 <- list() # 21:40
+l3 <- list() # 41:60
+l4 <- list() # 61:80
+l5 <- list() # 81:96
+
+for (i in 1:20){
+  print(i)
+  l1[[i]] <- l[[i]]
+} 
+
+for (i in 21:40){
+  print(i)
+  l2[[i-20]] <- l[[i]]
+}
+
+for (i in 41:60){
+  print(i)
+  l3[[i-40]] <- l[[i]]
+}
+
+for (i in 61:80){
+  print(i)
+  l4[[i-60]] <- l[[i]]
+}
+
+for (i in 81:96){
+  print(i)
+  l5[[i-80]] <- l[[i]]
+}
+
+length(l1)
+length(l2)
+length(l3)
+length(l4)
+length(l5)
+
+
+grid.arrange(grobs = l1, ncol=4)
+grid.arrange(grobs = l2, ncol=4)
+grid.arrange(grobs = l3, ncol=4)
+grid.arrange(grobs = l4, ncol=4)
+grid.arrange(grobs = l5, ncol=4)
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+## Getting the well number for the experiment pipetting
 
 ```{r}
 # import data

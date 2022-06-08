@@ -93,6 +93,22 @@ plot_UMAP <- function(df_Biobank){
 # import tree
 phy_tree <- ape::read.tree("data/Biobank_align_mafft.fasta.treefile_rooted.nwk")
 phy_tree
+
+# import database
+df_Biobank <- read.csv('data/biobank.umap.16sSeqs.csv')
+# how many species
+df_species <- df_Biobank %>% group_by(species) %>% summarise(number=n_distinct(species))
+# get id and sequence
+# id is seq_id + species
+phylo_Biobank <- df_Biobank %>% unite(phy_id,c("seq_id",'species'),sep="_", remove=F)
+phylo_Biobank$species <- gsub("\\[","",phylo_Biobank$species)
+phylo_Biobank$species <- gsub("]","",phylo_Biobank$species)
+# remove space in the id for downstream
+phylo_Biobank$phy_id <- gsub(" ","_",phylo_Biobank$phy_id) 
+# remove "[" and "]"
+phylo_Biobank$phy_id <- gsub("\\[","",phylo_Biobank$phy_id)
+phylo_Biobank$phy_id <- gsub("]","",phylo_Biobank$phy_id)
+col2_Biobank <- phylo_Biobank %>% dplyr::select(phy_id,nuc_sequence)
 ```
 
 ## 1. Import 66 strain list 
